@@ -1,0 +1,45 @@
+[project]
+name = "nfl-analysis"
+version = "0.1.0"
+description = "NFL analytics, prediction, betting, and fantasy football platform"
+readme = "README.md"
+authors = [
+    { name = "Ron Haber", email = "haberrj95@gmail.com" }
+]
+requires-python = ">=3.12, <3.13"
+dependencies = [
+    "django>=5.2,<6.0",
+    "psycopg[binary]>=3.2",
+    "python-dotenv>=1.0",
+    "numpy>=2.0",
+    "pandas>=2.2",
+    "scikit-learn>=1.7",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-django>=4.9",
+    "ruff>=0.12",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "I",
+    "UP",
+    "B",
+]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+pythonpath = ["src"]
+python_files = [
+    "test_*.py",
+    "*_test.py",
+]
