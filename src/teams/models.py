@@ -1,9 +1,6 @@
 from django.db import models
 
-from games.models import Season
 
-
-# Create your models here.
 class League(models.Model):
     name = models.CharField(max_length=20, unique=True)
     abbreviation = models.CharField(max_length=10, unique=True)
@@ -15,12 +12,22 @@ class League(models.Model):
 class Conference(models.Model):
     name = models.CharField(max_length=20)
     abbreviation = models.CharField(max_length=10)
-    league = models.ForeignKey(League, on_delete=models.CASCADE, related_name="conferences")
+    league = models.ForeignKey(
+        League,
+        on_delete=models.CASCADE,
+        related_name="conferences",
+    )
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=["league", "name"], name="unique_conference_per_league"),
-            models.UniqueConstraint(fields=["league", "abbreviation"], name="unique_conference_abbrev_per_league"),
+            models.UniqueConstraint(
+                fields=["league", "name"],
+                name="unique_conference_per_league",
+            ),
+            models.UniqueConstraint(
+                fields=["league", "abbreviation"],
+                name="unique_conference_abbrev_per_league",
+            ),
         ]
 
     def __str__(self):
@@ -30,13 +37,21 @@ class Conference(models.Model):
 class Division(models.Model):
     name = models.CharField(max_length=20)
     abbreviation = models.CharField(max_length=10)
-    conference = models.ForeignKey(Conference, on_delete=models.CASCADE, related_name="divisions")
+    conference = models.ForeignKey(
+        Conference,
+        on_delete=models.CASCADE,
+        related_name="divisions",
+    )
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=["conference", "name"], name="unique_division_per_conference"),
             models.UniqueConstraint(
-                fields=["conference", "abbreviation"], name="unique_division_abbrev_per_conference"
+                fields=["conference", "name"],
+                name="unique_division_per_conference",
+            ),
+            models.UniqueConstraint(
+                fields=["conference", "abbreviation"],
+                name="unique_division_abbrev_per_conference",
             ),
         ]
 
@@ -64,16 +79,37 @@ class TeamSeason(models.Model):
     Conference and division are optional because not all leagues use them.
     """
 
-    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="season_memberships")
-    season = models.ForeignKey(Season, on_delete=models.CASCADE, related_name="team_memberships")
-    conference = models.ForeignKey(
-        Conference, on_delete=models.PROTECT, related_name="team_seasons", null=True, blank=True
+    team = models.ForeignKey(
+        Team,
+        on_delete=models.CASCADE,
+        related_name="season_memberships",
     )
-    division = models.ForeignKey(Division, on_delete=models.PROTECT, related_name="team_seasons", null=True, blank=True)
+    season = models.ForeignKey(
+        "games.Season",
+        on_delete=models.CASCADE,
+        related_name="team_memberships",
+    )
+    conference = models.ForeignKey(
+        Conference,
+        on_delete=models.PROTECT,
+        related_name="team_seasons",
+        null=True,
+        blank=True,
+    )
+    division = models.ForeignKey(
+        Division,
+        on_delete=models.PROTECT,
+        related_name="team_seasons",
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=["team", "season"], name="unique_team_per_season"),
+            models.UniqueConstraint(
+                fields=["team", "season"],
+                name="unique_team_per_season",
+            ),
         ]
 
     def __str__(self):
