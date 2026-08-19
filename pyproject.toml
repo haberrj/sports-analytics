@@ -19,6 +19,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "pytest>=8.0",
+    "pytest-cov>=7.1.0",
     "pytest-django>=4.9",
     "ruff>=0.12",
 ]
@@ -26,6 +27,9 @@ dev = [
 [tool.ruff]
 line-length = 120
 target-version = "py312"
+exclude = [
+    "**/migrations/*.py",
+]
 
 [tool.ruff.lint]
 select = [
@@ -43,3 +47,16 @@ python_files = [
     "test_*.py",
     "*_test.py",
 ]
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/migrations/*",
+    "*/tests/*",
+    "src/manage.py",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+fail_under = 80
