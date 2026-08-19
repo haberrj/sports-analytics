@@ -48,6 +48,13 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "betting",
+    "fantasy",
+    "games",
+    "players",
+    "predictions",
+    "stats",
+    "teams",
 ]
 
 ROOT_URLCONF = "config.urls"
