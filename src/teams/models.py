@@ -57,13 +57,12 @@ class TeamSeason(models.Model):
     """
     Represents a team's league structure for a specific season.
 
-    League, conference, and division membership can change between seasons,
+    Conference and division membership can change between seasons,
     so these relationships are stored here rather than directly on Team.
     Conference and division are optional because not all leagues use them.
     """
     team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="season_memberships")
     season = models.ForeignKey(Season, on_delete=models.CASCADE, related_name="team_memberships")
-    league = models.ForeignKey(League, on_delete=models.PROTECT, related_name="team_seasons")
     conference = models.ForeignKey(Conference, on_delete=models.PROTECT, related_name="team_seasons",
                                 null=True, blank=True)
     division = models.ForeignKey(Division, on_delete=models.PROTECT, related_name="team_seasons",
