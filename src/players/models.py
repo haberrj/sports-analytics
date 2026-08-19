@@ -119,6 +119,12 @@ class NFLPlayerGameStats(models.Model):
         ).exists():
             raise ValidationError({"team": "Team does not belong to this game's season."})
 
+        if self.team_id not in {
+            self.game.home_team_id,
+            self.game.away_team_id,
+        }:
+            raise ValidationError({"team": "Team is not participating in this game."})
+
     def __str__(self):
         return f"{self.player} - {self.game}"
 
@@ -181,6 +187,12 @@ class NFLGamePlayerStatus(models.Model):
             season_id=self.game.season_id,
         ).exists():
             raise ValidationError({"team": "Team does not belong to this game's season."})
+
+        if self.team_id not in {
+            self.game.home_team_id,
+            self.game.away_team_id,
+        }:
+            raise ValidationError({"team": "Team is not participating in this game."})
 
     def __str__(self):
         return f"{self.player} - {self.game} - {self.status}"

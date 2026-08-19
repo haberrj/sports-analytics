@@ -1,8 +1,9 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 
 
 class League(models.Model):
-    name = models.CharField(max_length=20, unique=True)
+    name = models.CharField(max_length=100, unique=True)
     abbreviation = models.CharField(max_length=10, unique=True)
 
     def __str__(self):
@@ -10,7 +11,7 @@ class League(models.Model):
 
 
 class Conference(models.Model):
-    name = models.CharField(max_length=20)
+    name = models.CharField(max_length=100)
     abbreviation = models.CharField(max_length=10)
     league = models.ForeignKey(
         League,
@@ -35,7 +36,7 @@ class Conference(models.Model):
 
 
 class Division(models.Model):
-    name = models.CharField(max_length=20)
+    name = models.CharField(max_length=100)
     abbreviation = models.CharField(max_length=10)
     conference = models.ForeignKey(
         Conference,
@@ -114,3 +115,19 @@ class TeamSeason(models.Model):
 
     def __str__(self):
         return f"{self.team} - {self.season}"
+
+    def clean(self):
+        super().clean()
+
+        if not self.season_id:
+            return
+
+        if self.conference_id and self.conference.league_id != self.season.league_id:
+            raise ValidationError({"conference": ("Conference does not belong to the same league as this season.")})
+
+        if self.division_id:
+            if not self.conference_id:
+                raise ValidationError({"division": ("A division cannot be assigned without a conference.")})
+
+            if self.division.conference_id != self.conference_id:
+                raise ValidationError({"division": ("Division does not belong to the selected conference.")})
