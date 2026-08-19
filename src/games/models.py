@@ -12,9 +12,7 @@ class Season(models.Model):
     end_date = models.DateField()
 
     class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=["league", "name"], name="unique_season_per_league")
-        ]
+        constraints = [models.UniqueConstraint(fields=["league", "name"], name="unique_season_per_league")]
 
     def __str__(self):
         return f"{self.league.abbreviation} {self.name}"
@@ -26,9 +24,7 @@ class Week(models.Model):
     name = models.CharField(max_length=50, blank=True)
 
     class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=["season", "number"], name="unique_week_per_season")
-        ]
+        constraints = [models.UniqueConstraint(fields=["season", "number"], name="unique_week_per_season")]
 
     def __str__(self):
         return self.name or f"{self.season} Week {self.number}"
@@ -62,8 +58,9 @@ class Game(models.Model):
 
     class Meta:
         constraints = [
-            models.CheckConstraint(condition=~models.Q(home_team=models.F("away_team")), name="different_home_and_away"),
-
+            models.CheckConstraint(
+                condition=~models.Q(home_team=models.F("away_team")), name="different_home_and_away"
+            ),
         ]
 
     def __str__(self):
@@ -76,15 +73,9 @@ class Game(models.Model):
             return
 
         if self.week_id and self.week.season_id != self.season_id:
-            raise ValidationError(
-                {"week": "Week does not belong to this season."}
-            )
-    
+            raise ValidationError({"week": "Week does not belong to this season."})
+
         if self.home_team_id and not TeamSeason.objects.filter(team=self.home_team_id, season=self.season).exists():
-            raise ValidationError(
-                {"home_team": "Home team does not belong to this season"}
-            )
+            raise ValidationError({"home_team": "Home team does not belong to this season"})
         if self.away_team_id and not TeamSeason.objects.filter(team=self.away_team_id, season=self.season).exists():
-            raise ValidationError(
-                {"away_team": "Away team does not belong to this season"}
-            )
+            raise ValidationError({"away_team": "Away team does not belong to this season"})

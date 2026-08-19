@@ -20,7 +20,7 @@ class Conference(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=["league", "name"], name="unique_conference_per_league"),
-            models.UniqueConstraint(fields=["league", "abbreviation"], name="unique_conference_abbrev_per_league")
+            models.UniqueConstraint(fields=["league", "abbreviation"], name="unique_conference_abbrev_per_league"),
         ]
 
     def __str__(self):
@@ -35,7 +35,9 @@ class Division(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=["conference", "name"], name="unique_division_per_conference"),
-            models.UniqueConstraint(fields=["conference", "abbreviation"], name="unique_division_abbrev_per_conference")
+            models.UniqueConstraint(
+                fields=["conference", "abbreviation"], name="unique_division_abbrev_per_conference"
+            ),
         ]
 
     def __str__(self):
@@ -61,19 +63,17 @@ class TeamSeason(models.Model):
     so these relationships are stored here rather than directly on Team.
     Conference and division are optional because not all leagues use them.
     """
+
     team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="season_memberships")
     season = models.ForeignKey(Season, on_delete=models.CASCADE, related_name="team_memberships")
-    conference = models.ForeignKey(Conference, on_delete=models.PROTECT, related_name="team_seasons",
-                                null=True, blank=True)
-    division = models.ForeignKey(Division, on_delete=models.PROTECT, related_name="team_seasons",
-                                 null=True, blank=True)
+    conference = models.ForeignKey(
+        Conference, on_delete=models.PROTECT, related_name="team_seasons", null=True, blank=True
+    )
+    division = models.ForeignKey(Division, on_delete=models.PROTECT, related_name="team_seasons", null=True, blank=True)
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(
-                fields=["team", "season"],
-                name="unique_team_per_season"
-            ),
+            models.UniqueConstraint(fields=["team", "season"], name="unique_team_per_season"),
         ]
 
     def __str__(self):
