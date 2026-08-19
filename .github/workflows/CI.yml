@@ -60,5 +60,10 @@ jobs:
       - name: Apply migrations
         run: uv run python src/manage.py migrate
 
-      - name: Run tests
-        run: uv run pytest
+      - name: Run tests with coverage
+        run: |
+          uv run pytest
+          --cov=src
+          --cov-report=term-missing
+          --cov-report=xml
+          --cov-fail-under=80
