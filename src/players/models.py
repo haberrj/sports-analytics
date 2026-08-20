@@ -199,6 +199,13 @@ class NFLGamePlayerStatus(models.Model):
 
 
 class NFLPlayerRanking(models.Model):
+    """
+    Stores a point-in-time, model-generated player ranking.
+
+    Rankings are position-specific and versioned so historical analyses
+    can reproduce the player strength values that were known at the time.
+    """
+
     player = models.ForeignKey(
         NFLPlayer,
         on_delete=models.CASCADE,
@@ -234,5 +241,8 @@ class NFLPlayerRanking(models.Model):
                     "model_version",
                 ],
                 name="unique_nfl_player_ranking_snapshot",
-            )
+            ),
         ]
+
+    def __str__(self):
+        return f"{self.player} - {self.position} #{self.rank} ({self.model_name} {self.model_version})"
