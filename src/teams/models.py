@@ -61,7 +61,8 @@ class Division(models.Model):
 
 
 class Team(models.Model):
-    slug = models.CharField(max_length=50, unique=True)
+    external_id = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=50, unique=True)
     name = models.CharField(max_length=100)
     abbreviation = models.CharField(max_length=10)
     city = models.CharField(max_length=100)
@@ -104,6 +105,9 @@ class TeamSeason(models.Model):
         null=True,
         blank=True,
     )
+    name = models.CharField(max_length=100)
+    abbreviation = models.CharField(max_length=10)
+    city = models.CharField(max_length=100)
 
     class Meta:
         constraints = [
