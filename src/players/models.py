@@ -196,3 +196,43 @@ class NFLGamePlayerStatus(models.Model):
 
     def __str__(self):
         return f"{self.player} - {self.game} - {self.status}"
+
+
+class NFLPlayerRanking(models.Model):
+    player = models.ForeignKey(
+        NFLPlayer,
+        on_delete=models.CASCADE,
+        related_name="rankings",
+    )
+    season = models.ForeignKey(
+        "games.Season",
+        on_delete=models.CASCADE,
+        related_name="nfl_player_rankings",
+    )
+
+    position = models.CharField(
+        max_length=10,
+        choices=NFLPlayer.Positions.choices,
+    )
+
+    rank = models.PositiveSmallIntegerField()
+    score = models.FloatField()
+
+    captured_at = models.DateTimeField()
+
+    model_name = models.CharField(max_length=100)
+    model_version = models.CharField(max_length=50)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "player",
+                    "season",
+                    "captured_at",
+                    "model_name",
+                    "model_version",
+                ],
+                name="unique_nfl_player_ranking_snapshot",
+            )
+        ]
