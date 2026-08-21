@@ -135,6 +135,9 @@ class NFLGameIngestor:
 
     @staticmethod
     def _get_start_time(game_data: dict) -> datetime:
+        if not game_data["gametime"]:
+            return None
+
         naive = datetime.strptime(
             f"{game_data['gameday']} {game_data['gametime']}",
             "%Y-%m-%d %H:%M",

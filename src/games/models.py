@@ -49,7 +49,7 @@ class Game(models.Model):
     week = models.ForeignKey(Week, on_delete=models.SET_NULL, related_name="games", null=True, blank=True)
     home_team = models.ForeignKey(Team, on_delete=models.PROTECT, related_name="home_games")
     away_team = models.ForeignKey(Team, on_delete=models.PROTECT, related_name="away_games")
-    start_time = models.DateTimeField()
+    start_time = models.DateTimeField(null=True, blank=True)
     home_score = models.PositiveSmallIntegerField(null=True, blank=True)
     away_score = models.PositiveSmallIntegerField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.SCHEDULED)
