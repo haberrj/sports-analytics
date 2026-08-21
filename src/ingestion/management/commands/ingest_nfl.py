@@ -39,22 +39,11 @@ class Command(BaseCommand):
         self.stdout.write(f"[{index}/{total}] Ingesting NFL season {season}...")
 
     def _write_season_result(self, season: int, results: dict[str, bool]) -> None:
-        if all(
-            result == IngestionResult.ALREADY_COMPLETE
-            for result in results.values()
-        ):
+        if all(result == IngestionResult.ALREADY_COMPLETE for result in results.values()):
             self.stdout.write(f"NFL season {season} has already been ingested.")
             return
-        ingested = [
-            dataset
-            for dataset, result in results.items()
-            if result == IngestionResult.INGESTED
-        ]
-        unavailable = [
-            dataset
-            for dataset, result in results.items()
-            if result == IngestionResult.UNAVAILABLE
-        ]
+        ingested = [dataset for dataset, result in results.items() if result == IngestionResult.INGESTED]
+        unavailable = [dataset for dataset, result in results.items() if result == IngestionResult.UNAVAILABLE]
         if ingested:
             self.stdout.write(f"NFL season {season} ingested: {', '.join(ingested)}.")
         if unavailable:

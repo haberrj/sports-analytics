@@ -44,7 +44,6 @@ class NFLGameIngestor(NFLIngestor):
         if not self.should_ingest(season):
             return IngestionResult.ALREADY_COMPLETE
 
-
         self.schedule = nfl.load_schedules([self.season])
         season = self._update_or_create_season(league)
 
