@@ -1,7 +1,8 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 
-from games.models import Game
-from teams.models import Team
+from games.models import Game, Season, Week
+from teams.models import Team, TeamSeason
 
 
 # Create your models here.
@@ -55,8 +56,13 @@ class NFLTeamGameStats(models.Model):
     offensive_turnovers = models.PositiveSmallIntegerField(null=True, blank=True)
     # Defense
     defensive_sacks = models.FloatField(null=True, blank=True)
+
     defensive_passing_yards_allowed = models.IntegerField(null=True, blank=True)
+    opponent_passing_attempts = models.PositiveSmallIntegerField(null=True, blank=True)
+
     defensive_rushing_yards_allowed = models.IntegerField(null=True, blank=True)
+    opponent_rushing_attempts = models.PositiveSmallIntegerField(null=True, blank=True)
+
     defensive_turnovers_forced = models.PositiveSmallIntegerField(null=True, blank=True)
     defensive_qb_hits = models.PositiveSmallIntegerField(null=True, blank=True)
     defensive_tackles_for_loss = models.PositiveSmallIntegerField(null=True, blank=True)
@@ -74,3 +80,49 @@ class NFLTeamGameStats(models.Model):
 
     def __str__(self):
         return f"{self.team} - {self.game}"
+
+
+class NFLTeamProfile(models.Model):
+    class TeamType(models.TextChoices):
+        PASS = "pass", "Pass"
+        RUSH = "rush", "Rush"
+        BALANCED = "balanced", "Balanced"
+
+    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="nfl_profiles")
+    season = models.ForeignKey(Season, on_delete=models.CASCADE, related_name="nfl_team_profiles")
+    through_week = models.ForeignKey(Week, on_delete=models.CASCADE, related_name="nfl_team_profiles")
+
+    pass_offense_strength = models.FloatField(null=True, blank=True)
+    rush_offense_strength = models.FloatField(null=True, blank=True)
+
+    pass_defense_strength = models.FloatField(null=True, blank=True)
+    rush_defense_strength = models.FloatField(null=True, blank=True)
+
+    offense_type = models.CharField(max_length=20, choices=TeamType.choices, null=True, blank=True)
+    defense_type = models.CharField(max_length=20, choices=TeamType.choices, null=True, blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["team", "season", "through_week"],
+                name="unique_nfl_team_profile_per_week",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.team} - {self.season.name} through week {self.through_week.number}"
+
+    def clean(self):
+        super().clean()
+
+        if self.through_week_id and self.season_id and self.through_week.season_id != self.season_id:
+            raise ValidationError({"through_week": ("Through week does not belong to this season.")})
+        if (
+            self.team_id
+            and self.season_id
+            and not TeamSeason.objects.filter(
+                team_id=self.team_id,
+                season_id=self.season_id,
+            ).exists()
+        ):
+            raise ValidationError({"team": "Team does not belong to this season."})
