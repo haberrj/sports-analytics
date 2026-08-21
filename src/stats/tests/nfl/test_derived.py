@@ -185,8 +185,14 @@ def test_get_team_aggregate_through_week():
         end_date="2026-02-28",
     )
 
-    week_1 = Week.objects.create(season=season, number=1)
-    week_2 = Week.objects.create(season=season, number=2)
+    week_1 = Week.objects.create(
+        season=season,
+        number=1,
+    )
+    week_2 = Week.objects.create(
+        season=season,
+        number=2,
+    )
 
     team = Team.objects.create(
         external_id="BUF",
@@ -237,7 +243,9 @@ def test_get_team_aggregate_through_week():
         passing_epa=8.0,
         rushing_epa=2.0,
         defensive_passing_yards_allowed=200,
+        opponent_passing_attempts=32,
         defensive_rushing_yards_allowed=100,
+        opponent_rushing_attempts=22,
         points_for=27,
         points_allowed=20,
         sacks_allowed=2,
@@ -259,7 +267,9 @@ def test_get_team_aggregate_through_week():
         passing_epa=12.0,
         rushing_epa=-1.0,
         defensive_passing_yards_allowed=250,
+        opponent_passing_attempts=38,
         defensive_rushing_yards_allowed=90,
+        opponent_rushing_attempts=24,
         points_for=31,
         points_allowed=24,
         sacks_allowed=1,
@@ -289,6 +299,9 @@ def test_get_team_aggregate_through_week():
 
     assert aggregate["passing_yards_allowed"] == 450
     assert aggregate["rushing_yards_allowed"] == 190
+
+    assert aggregate["opponent_passing_attempts"] == 70
+    assert aggregate["opponent_rushing_attempts"] == 46
 
     assert aggregate["points_for"] == 58
     assert aggregate["points_allowed"] == 44
@@ -320,7 +333,7 @@ def test_safe_divide_returns_none_for_none_numerator():
 
 
 @pytest.mark.django_db
-def test_get_team_efficiency_through_week():
+def test_get_team_metrics_through_week():
     league = League.objects.create(
         name="National Football League",
         abbreviation="NFL",
@@ -388,6 +401,8 @@ def test_get_team_efficiency_through_week():
         passing_attempts=30,
         offensive_rushing_yards=120,
         rushing_attempts=24,
+        passing_epa=8.0,
+        rushing_epa=2.0,
         defensive_passing_yards_allowed=180,
         opponent_passing_attempts=30,
         defensive_rushing_yards_allowed=80,
@@ -401,28 +416,38 @@ def test_get_team_efficiency_through_week():
         passing_attempts=40,
         offensive_rushing_yards=100,
         rushing_attempts=26,
+        passing_epa=12.0,
+        rushing_epa=-1.0,
         defensive_passing_yards_allowed=210,
         opponent_passing_attempts=30,
         defensive_rushing_yards_allowed=90,
         opponent_rushing_attempts=20,
     )
 
-    efficiency = NFLDerivedStatsService.get_team_efficiency_through_week(
+    metrics = NFLDerivedStatsService.get_team_metrics_through_week(
         team=team,
         week=week_2,
     )
 
-    assert efficiency["pass_offense"] == pytest.approx(520 / 70)
+    # Efficiency
+    assert metrics["pass_offense_yards_per_attempt"] == pytest.approx(520 / 70)
+    assert metrics["rush_offense_yards_per_attempt"] == pytest.approx(220 / 50)
+    assert metrics["pass_defense_yards_per_attempt"] == pytest.approx(390 / 60)
+    assert metrics["rush_defense_yards_per_attempt"] == pytest.approx(170 / 40)
 
-    assert efficiency["rush_offense"] == pytest.approx(220 / 50)
+    # Volume
+    assert metrics["pass_offense_yards_per_game"] == pytest.approx(520 / 2)
+    assert metrics["rush_offense_yards_per_game"] == pytest.approx(220 / 2)
+    assert metrics["pass_defense_yards_per_game"] == pytest.approx(390 / 2)
+    assert metrics["rush_defense_yards_per_game"] == pytest.approx(170 / 2)
 
-    assert efficiency["pass_defense"] == pytest.approx(390 / 60)
-
-    assert efficiency["rush_defense"] == pytest.approx(170 / 40)
+    # Value
+    assert metrics["pass_offense_epa_per_game"] == pytest.approx(20 / 2)
+    assert metrics["rush_offense_epa_per_game"] == pytest.approx(1 / 2)
 
 
 @pytest.mark.django_db
-def test_get_team_efficiency_returns_none_when_attempts_missing():
+def test_get_team_metrics_handles_missing_attempts():
     league = League.objects.create(
         name="National Football League",
         abbreviation="NFL",
@@ -474,18 +499,31 @@ def test_get_team_efficiency_returns_none_when_attempts_missing():
         passing_attempts=None,
         offensive_rushing_yards=100,
         rushing_attempts=None,
+        passing_epa=6.0,
+        rushing_epa=1.0,
         defensive_passing_yards_allowed=200,
         opponent_passing_attempts=None,
         defensive_rushing_yards_allowed=90,
         opponent_rushing_attempts=None,
     )
 
-    efficiency = NFLDerivedStatsService.get_team_efficiency_through_week(
+    metrics = NFLDerivedStatsService.get_team_metrics_through_week(
         team=team,
         week=week,
     )
 
-    assert efficiency["pass_offense"] is None
-    assert efficiency["rush_offense"] is None
-    assert efficiency["pass_defense"] is None
-    assert efficiency["rush_defense"] is None
+    # Efficiency requires attempt counts.
+    assert metrics["pass_offense_yards_per_attempt"] is None
+    assert metrics["rush_offense_yards_per_attempt"] is None
+    assert metrics["pass_defense_yards_per_attempt"] is None
+    assert metrics["rush_defense_yards_per_attempt"] is None
+
+    # Volume remains calculable.
+    assert metrics["pass_offense_yards_per_game"] == pytest.approx(250)
+    assert metrics["rush_offense_yards_per_game"] == pytest.approx(100)
+    assert metrics["pass_defense_yards_per_game"] == pytest.approx(200)
+    assert metrics["rush_defense_yards_per_game"] == pytest.approx(90)
+
+    # EPA remains calculable.
+    assert metrics["pass_offense_epa_per_game"] == pytest.approx(6.0)
+    assert metrics["rush_offense_epa_per_game"] == pytest.approx(1.0)

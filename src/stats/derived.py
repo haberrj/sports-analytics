@@ -66,3 +66,53 @@ class NFLDerivedStatsService:
                 aggregate["rushing_yards_allowed"], aggregate["opponent_rushing_attempts"]
             ),
         }
+
+    @staticmethod
+    def get_team_metrics_through_week(team: Team, week: Week) -> dict[str, float | None]:
+        aggregate = NFLDerivedStatsService.get_team_aggregate_through_week(team=team, week=week)
+        games = aggregate["games"]
+        return {
+            # Efficiency
+            "pass_offense_yards_per_attempt": NFLDerivedStatsService._safe_divide(
+                aggregate["passing_yards"],
+                aggregate["passing_attempts"],
+            ),
+            "rush_offense_yards_per_attempt": NFLDerivedStatsService._safe_divide(
+                aggregate["rushing_yards"],
+                aggregate["rushing_attempts"],
+            ),
+            "pass_defense_yards_per_attempt": NFLDerivedStatsService._safe_divide(
+                aggregate["passing_yards_allowed"],
+                aggregate["opponent_passing_attempts"],
+            ),
+            "rush_defense_yards_per_attempt": NFLDerivedStatsService._safe_divide(
+                aggregate["rushing_yards_allowed"],
+                aggregate["opponent_rushing_attempts"],
+            ),
+            # Volume
+            "pass_offense_yards_per_game": NFLDerivedStatsService._safe_divide(
+                aggregate["passing_yards"],
+                games,
+            ),
+            "rush_offense_yards_per_game": NFLDerivedStatsService._safe_divide(
+                aggregate["rushing_yards"],
+                games,
+            ),
+            "pass_defense_yards_per_game": NFLDerivedStatsService._safe_divide(
+                aggregate["passing_yards_allowed"],
+                games,
+            ),
+            "rush_defense_yards_per_game": NFLDerivedStatsService._safe_divide(
+                aggregate["rushing_yards_allowed"],
+                games,
+            ),
+            # Value
+            "pass_offense_epa_per_game": NFLDerivedStatsService._safe_divide(
+                aggregate["passing_epa"],
+                games,
+            ),
+            "rush_offense_epa_per_game": NFLDerivedStatsService._safe_divide(
+                aggregate["rushing_epa"],
+                games,
+            ),
+        }

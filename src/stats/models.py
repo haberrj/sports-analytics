@@ -92,9 +92,29 @@ class NFLTeamProfile(models.Model):
     season = models.ForeignKey(Season, on_delete=models.CASCADE, related_name="nfl_team_profiles")
     through_week = models.ForeignKey(Week, on_delete=models.CASCADE, related_name="nfl_team_profiles")
 
+    # Offensive efficiency
+    pass_offense_yards_per_attempt = models.FloatField(null=True, blank=True)
+    rush_offense_yards_per_attempt = models.FloatField(null=True, blank=True)
+
+    # Defensive efficiency
+    pass_defense_yards_per_attempt = models.FloatField(null=True, blank=True)
+    rush_defense_yards_per_attempt = models.FloatField(null=True, blank=True)
+
+    # Offensive volume
+    pass_offense_yards_per_game = models.FloatField(null=True, blank=True)
+    rush_offense_yards_per_game = models.FloatField(null=True, blank=True)
+
+    # Defensive volume
+    pass_defense_yards_per_game = models.FloatField(null=True, blank=True)
+    rush_defense_yards_per_game = models.FloatField(null=True, blank=True)
+
+    # Offensive value
+    pass_offense_epa_per_game = models.FloatField(null=True, blank=True)
+    rush_offense_epa_per_game = models.FloatField(null=True, blank=True)
+
+    # League relative strengths
     pass_offense_strength = models.FloatField(null=True, blank=True)
     rush_offense_strength = models.FloatField(null=True, blank=True)
-
     pass_defense_strength = models.FloatField(null=True, blank=True)
     rush_defense_strength = models.FloatField(null=True, blank=True)
 
