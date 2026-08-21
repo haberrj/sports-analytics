@@ -56,6 +56,7 @@ class NFLGameIngestor(NFLIngestor):
             self._update_or_create_game(
                 season=season, week=week, home_team=home_team, away_team=away_team, game_data=game_data
             )
+        self.complete(season)
 
     def _update_or_create_season(self, league: League) -> Season:
         game_dates = [

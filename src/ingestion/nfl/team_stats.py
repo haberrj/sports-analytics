@@ -80,6 +80,7 @@ class NFLTeamStatsIngestor(NFLIngestor):
                     "field_goals_attempted": team_data["fg_att"],
                 },
             )
+        self.complete(season)
 
     def _get_opponent_data(self, team_data: dict) -> dict:
         opponent = self.stats.filter(

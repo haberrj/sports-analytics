@@ -45,6 +45,7 @@ class NFLTeamIngestor(NFLIngestor):
             self._update_or_create_team_season(
                 team=team, division=division, conference=conference, season=season, team_data=team_data
             )
+        self.complete(season)
 
     def _get_or_create_league(self) -> League:
         league, _ = League.objects.update_or_create(
