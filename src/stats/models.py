@@ -30,28 +30,36 @@ class NFLTeamGameStats(models.Model):
     offensive_passing_yards = models.IntegerField(default=0)
     passing_attempts = models.PositiveSmallIntegerField(default=0)
     passing_completions = models.PositiveSmallIntegerField(default=0)
+    passing_epa = models.FloatField(default=0)
+    passing_cpoe = models.FloatField(default=0)
+    passing_air_yards = models.IntegerField(default=0)
+    passing_yards_after_catch = models.IntegerField(default=0)
 
     offensive_rushing_yards = models.IntegerField(default=0)
     rushing_attempts = models.PositiveSmallIntegerField(default=0)
+    rushing_epa = models.FloatField(default=0)
 
     sacks_allowed = models.PositiveSmallIntegerField(default=0)
-    first_downs = models.PositiveSmallIntegerField(default=0)
+    # Downs are interpreted from data and a direct raw value isn't given by nflreadpy
+    first_downs = models.PositiveSmallIntegerField(null=True, blank=True)
 
-    third_down_attempts = models.PositiveSmallIntegerField(default=0)
-    third_down_conversions = models.PositiveSmallIntegerField(default=0)
+    third_down_attempts = models.PositiveSmallIntegerField(null=True, blank=True)
+    third_down_conversions = models.PositiveSmallIntegerField(null=True, blank=True)
 
-    fourth_down_attempts = models.PositiveSmallIntegerField(default=0)
-    fourth_down_conversions = models.PositiveSmallIntegerField(default=0)
+    fourth_down_attempts = models.PositiveSmallIntegerField(null=True, blank=True)
+    fourth_down_conversions = models.PositiveSmallIntegerField(null=True, blank=True)
 
     penalties = models.PositiveSmallIntegerField(default=0)
     penalty_yards = models.PositiveSmallIntegerField(default=0)
 
     offensive_turnovers = models.PositiveSmallIntegerField(default=0)
     # Defense
-    defensive_sacks = models.PositiveSmallIntegerField(default=0)
+    defensive_sacks = models.FloatField(default=0)
     defensive_passing_yards_allowed = models.IntegerField(default=0)
     defensive_rushing_yards_allowed = models.IntegerField(default=0)
     defensive_turnovers_forced = models.PositiveSmallIntegerField(default=0)
+    defensive_qb_hits = models.PositiveSmallIntegerField(default=0)
+    defensive_tackles_for_loss = models.PositiveSmallIntegerField(default=0)
     # Special Teams
     field_goals_made = models.PositiveSmallIntegerField(default=0)
     field_goals_attempted = models.PositiveSmallIntegerField(default=0)
