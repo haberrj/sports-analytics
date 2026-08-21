@@ -1,2 +1,2 @@
-# nfl-analysis
-An application for analyzing NFL stats and determining the likelihood of winning a matchup.
+# sports-analytics
+An application for analyzing professional sports stats and determining the likelihood of winning a matchup.
