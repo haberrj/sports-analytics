@@ -3,43 +3,33 @@ from unittest.mock import Mock, call, patch
 from ingestion.nfl.service import NFLIngestionService
 
 
-@patch.object(
-    NFLIngestionService,
-    "ingest_season",
-)
-@patch.object(
-    NFLIngestionService,
-    "get_available_seasons",
-)
-def test_ingest_all_seasons_calls_progress_callback(
-    mock_get_available_seasons,
-    mock_ingest_season,
+@patch("ingestion.nfl.service.NFLTeamStatsIngestor")
+@patch("ingestion.nfl.service.NFLGameIngestor")
+@patch("ingestion.nfl.service.NFLTeamIngestor")
+def test_ingest_season_runs_pipeline_in_order(
+    mock_team_ingestor,
+    mock_game_ingestor,
+    mock_team_stats_ingestor,
 ):
-    mock_get_available_seasons.return_value = [
-        2023,
-        2024,
-        2025,
+    parent = Mock()
+
+    parent.attach_mock(
+        mock_team_ingestor.return_value.ingest,
+        "teams",
+    )
+    parent.attach_mock(
+        mock_game_ingestor.return_value.ingest,
+        "games",
+    )
+    parent.attach_mock(
+        mock_team_stats_ingestor.return_value.ingest,
+        "team_stats",
+    )
+
+    NFLIngestionService().ingest_season(2025)
+
+    assert parent.mock_calls == [
+        call.teams(),
+        call.games(),
+        call.team_stats(),
     ]
-
-    callback = Mock()
-    service = NFLIngestionService()
-
-    service.ingest_all_seasons(
-        on_season_start=callback,
-    )
-
-    callback.assert_has_calls(
-        [
-            call(2023, 1, 3),
-            call(2024, 2, 3),
-            call(2025, 3, 3),
-        ]
-    )
-
-    mock_ingest_season.assert_has_calls(
-        [
-            call(2023),
-            call(2024),
-            call(2025),
-        ]
-    )

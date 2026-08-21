@@ -4,7 +4,6 @@ from polars import DataFrame
 from games.models import Game, Season
 from ingestion.models import IngestionState
 from ingestion.nfl.base import NFLIngestor
-from ingestion.nfl.games import NFLGameIngestor
 from stats.models import NFLTeamGameStats
 from teams.models import Team, TeamSeason
 
@@ -17,8 +16,6 @@ class NFLTeamStatsIngestor(NFLIngestor):
         self.stats: DataFrame
 
     def ingest(self) -> None:
-        NFLGameIngestor(self.season).ingest()
-
         season = Season.objects.get(
             league__abbreviation="NFL",
             name=str(self.season),

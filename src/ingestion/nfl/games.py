@@ -7,7 +7,6 @@ from polars import DataFrame
 from games.models import Game, Season, Week
 from ingestion.models import IngestionState
 from ingestion.nfl.base import NFLIngestor
-from ingestion.nfl.teams import NFLTeamIngestor
 from teams.models import League, Team, TeamSeason
 
 
@@ -35,8 +34,6 @@ class NFLGameIngestor(NFLIngestor):
         self.schedule: DataFrame
 
     def ingest(self) -> None:
-        NFLTeamIngestor(self.season).ingest()  # idempotent call for safety
-
         league = League.objects.get(abbreviation="NFL")
         season = Season.objects.get(
             league__abbreviation="NFL",

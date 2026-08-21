@@ -53,6 +53,7 @@ def ingested_teams():
         name="National Football League",
         abbreviation="NFL",
     )
+
     season = Season.objects.create(
         league=league,
         name="2025",
@@ -65,6 +66,7 @@ def ingested_teams():
         name="NFC",
         abbreviation="NFC",
     )
+
     east = Division.objects.create(
         conference=nfc,
         name="East",
@@ -102,11 +104,9 @@ def ingested_teams():
 
 
 @pytest.mark.django_db
-@patch("ingestion.nfl.games.NFLTeamIngestor.ingest")
 @patch("ingestion.nfl.games.nfl.load_schedules")
 def test_ingests_completed_game(
     mock_load_schedules,
-    mock_team_ingest,
     schedule_data,
     ingested_teams,
 ):
@@ -129,11 +129,9 @@ def test_ingests_completed_game(
 
 
 @pytest.mark.django_db
-@patch("ingestion.nfl.games.NFLTeamIngestor.ingest")
 @patch("ingestion.nfl.games.nfl.load_schedules")
 def test_ingests_overtime_game(
     mock_load_schedules,
-    mock_team_ingest,
     schedule_data,
     ingested_teams,
 ):
@@ -149,17 +147,18 @@ def test_ingests_overtime_game(
 
 
 @pytest.mark.django_db
-@patch("ingestion.nfl.games.NFLTeamIngestor.ingest")
 @patch("ingestion.nfl.games.nfl.load_schedules")
 def test_game_ingestion_is_idempotent(
     mock_load_schedules,
-    mock_team_ingest,
     schedule_data,
     ingested_teams,
 ):
     mock_load_schedules.return_value = schedule_data
 
-    ingestor = NFLGameIngestor(2025)
+    ingestor = NFLGameIngestor(
+        2025,
+        force=True,
+    )
 
     ingestor.ingest()
     ingestor.ingest()
@@ -168,26 +167,13 @@ def test_game_ingestion_is_idempotent(
     assert Week.objects.count() == 2
 
 
-@pytest.mark.django_db
-@patch("ingestion.nfl.games.NFLTeamIngestor.ingest")
-@patch("ingestion.nfl.games.nfl.load_schedules")
-def test_game_ingestor_ensures_team_dependency(
-    mock_load_schedules,
-    mock_team_ingest,
-    schedule_data,
-    ingested_teams,
-):
-    mock_load_schedules.return_value = schedule_data
-
-    NFLGameIngestor(2025).ingest()
-
-    mock_team_ingest.assert_called_once()
-
-
 def test_unknown_game_type_raises_error():
     ingestor = object.__new__(NFLGameIngestor)
 
-    with pytest.raises(ValueError, match="Unknown NFL game type"):
+    with pytest.raises(
+        ValueError,
+        match="Unknown NFL game type",
+    ):
         ingestor._get_phase({"game_type": "UNKNOWN"})
 
 
@@ -199,4 +185,5 @@ def test_scheduled_game_has_no_finish_type():
     }
 
     assert NFLGameIngestor._get_status(game_data) == Game.Status.SCHEDULED
+
     assert NFLGameIngestor._get_finish_type(game_data) is None

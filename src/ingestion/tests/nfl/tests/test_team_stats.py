@@ -169,11 +169,9 @@ def team_stats_data():
 
 
 @pytest.mark.django_db
-@patch("ingestion.nfl.team_stats.NFLGameIngestor.ingest")
 @patch("ingestion.nfl.team_stats.nfl.load_team_stats")
 def test_ingests_team_stats(
     mock_load_team_stats,
-    mock_game_ingest,
     game,
     team_stats_data,
 ):
@@ -228,11 +226,9 @@ def test_ingests_team_stats(
 
 
 @pytest.mark.django_db
-@patch("ingestion.nfl.team_stats.NFLGameIngestor.ingest")
 @patch("ingestion.nfl.team_stats.nfl.load_team_stats")
 def test_opponent_stats_are_used_for_defensive_yards_allowed(
     mock_load_team_stats,
-    mock_game_ingest,
     game,
     team_stats_data,
 ):
@@ -244,24 +240,25 @@ def test_opponent_stats_are_used_for_defensive_yards_allowed(
         game=game,
         team__abbreviation="ARI",
     )
+
     new_orleans = NFLTeamGameStats.objects.get(
         game=game,
         team__abbreviation="NO",
     )
 
     assert arizona.defensive_passing_yards_allowed == new_orleans.offensive_passing_yards
+
     assert arizona.defensive_rushing_yards_allowed == new_orleans.offensive_rushing_yards
 
     assert new_orleans.defensive_passing_yards_allowed == arizona.offensive_passing_yards
+
     assert new_orleans.defensive_rushing_yards_allowed == arizona.offensive_rushing_yards
 
 
 @pytest.mark.django_db
-@patch("ingestion.nfl.team_stats.NFLGameIngestor.ingest")
 @patch("ingestion.nfl.team_stats.nfl.load_team_stats")
 def test_team_stats_ingestion_is_idempotent(
     mock_load_team_stats,
-    mock_game_ingest,
     game,
     team_stats_data,
 ):
@@ -283,11 +280,9 @@ def test_team_stats_ingestion_is_idempotent(
 
 
 @pytest.mark.django_db
-@patch("ingestion.nfl.team_stats.NFLGameIngestor.ingest")
 @patch("ingestion.nfl.team_stats.nfl.load_team_stats")
 def test_team_stats_ingestion_marks_dataset_complete(
     mock_load_team_stats,
-    mock_game_ingest,
     season,
     game,
     team_stats_data,
@@ -305,11 +300,9 @@ def test_team_stats_ingestion_marks_dataset_complete(
 
 
 @pytest.mark.django_db
-@patch("ingestion.nfl.team_stats.NFLGameIngestor.ingest")
 @patch("ingestion.nfl.team_stats.nfl.load_team_stats")
 def test_completed_team_stats_do_not_reload_source(
     mock_load_team_stats,
-    mock_game_ingest,
     season,
     game,
 ):
@@ -326,11 +319,9 @@ def test_completed_team_stats_do_not_reload_source(
 
 
 @pytest.mark.django_db
-@patch("ingestion.nfl.team_stats.NFLGameIngestor.ingest")
 @patch("ingestion.nfl.team_stats.nfl.load_team_stats")
 def test_force_reloads_completed_team_stats(
     mock_load_team_stats,
-    mock_game_ingest,
     season,
     game,
     team_stats_data,
@@ -350,23 +341,8 @@ def test_force_reloads_completed_team_stats(
     ).ingest()
 
     mock_load_team_stats.assert_called_once_with(2025)
+
     assert NFLTeamGameStats.objects.count() == 2
-
-
-@pytest.mark.django_db
-@patch("ingestion.nfl.team_stats.NFLGameIngestor.ingest")
-@patch("ingestion.nfl.team_stats.nfl.load_team_stats")
-def test_game_ingestion_dependency_is_called(
-    mock_load_team_stats,
-    mock_game_ingest,
-    game,
-    team_stats_data,
-):
-    mock_load_team_stats.return_value = team_stats_data
-
-    NFLTeamStatsIngestor(2025).ingest()
-
-    mock_game_ingest.assert_called_once_with()
 
 
 def test_offensive_turnovers_combines_interceptions_and_lost_fumbles():
