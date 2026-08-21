@@ -1,7 +1,15 @@
-from ingestion.nfl.schedules import ingest_schedule
-from ingestion.nfl.teams import ingest_teams
+from abc import ABC, abstractmethod
 
 
-def ingest_nfl(season: int):
-    ingest_schedule(season)
-    ingest_teams()
+class LeagueIngestionService(ABC):
+    @abstractmethod
+    def get_available_seasons(self) -> list[int]:
+        pass
+
+    @abstractmethod
+    def ingest_season(self, season: int) -> None:
+        pass
+
+    def ingest_all_seasons(self) -> None:
+        for season in self.get_available_seasons():
+            self.ingest_season(season)
