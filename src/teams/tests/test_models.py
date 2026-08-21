@@ -27,6 +27,7 @@ def season(nfl):
 @pytest.fixture
 def bills():
     return Team.objects.create(
+        external_id="0610",
         slug="nfl-buf",
         name="Bills",
         abbreviation="BUF",

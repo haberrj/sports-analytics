@@ -1,7 +1,7 @@
 [project]
-name = "nfl-analysis"
+name = "sports-analytics"
 version = "0.1.0"
-description = "NFL analytics, prediction, betting, and fantasy football platform"
+description = "Professional sports analytics, prediction, betting, and fantasy league platform"
 readme = "README.md"
 authors = [
     { name = "Ron Haber", email = "haberrj95@gmail.com" }
@@ -14,6 +14,7 @@ dependencies = [
     "numpy>=2.0",
     "pandas>=2.2",
     "scikit-learn>=1.7",
+    "nflreadpy>=0.1.5",
 ]
 
 [dependency-groups]

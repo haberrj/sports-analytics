@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "predictions",
     "stats",
     "teams",
+    "ingestion",
 ]
 
 MIDDLEWARE = [
