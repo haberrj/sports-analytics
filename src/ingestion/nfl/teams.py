@@ -4,7 +4,8 @@ import nflreadpy as nfl
 from django.utils.text import slugify
 from polars import DataFrame
 
-from teams.models import Conference, Division, League, Team
+from teams.models import Conference, Division, League, Team, TeamSeason
+from games.models import Season
 
 
 class NFLTeamIngestor:
@@ -26,12 +27,20 @@ class NFLTeamIngestor:
 
     def ingest(self) -> None:
         league = self._get_or_create_league()
+        season = self._get_or_create_season(league)
         season_teams = self._get_season_franchises()
 
         for team_data in season_teams.iter_rows(named=True):
             conference = self._get_or_create_conference(league, team_data)
-            self._get_or_create_division(conference, team_data)
-            self._update_or_create_team(team_data)
+            division = self._get_or_create_division(conference, team_data)
+            team = self._update_or_create_team(team_data)
+            self._update_or_create_team_season(
+                team=team,
+                division=division,
+                conference=conference,
+                season=season,
+                team_data=team_data
+            )
 
     def _get_or_create_league(self) -> League:
         league, _ = League.objects.update_or_create(
@@ -96,6 +105,35 @@ class NFLTeamIngestor:
         active_abbreviations = set(schedules["home_team"].to_list() + schedules["away_team"].to_list())
 
         return self.teams.filter(self.teams["team_abbr"].is_in(active_abbreviations))
+
+    def _get_or_create_season(self, league: League) -> Season:
+        season, _ = Season.objects.update_or_create(
+            league=league,
+            name=str(self.season),
+            defaults={
+                "start_date": date(self.season, 9, 1),  # Expanded season hard coded dates to be changed later
+                "end_date": date(self.season + 1, 2, 28)
+            }
+        )
+        return season
+
+    def _update_or_create_team_season(self, team: Team, season: Season, conference: Conference, 
+                                      division: Division, team_data: DataFrame) -> TeamSeason:
+        team_season, _ = TeamSeason.objects.update_or_create(
+            team=team,
+            season=season,
+            defaults={
+                "conference": conference,
+                "division": division,
+                "name": team_data["team_nick"],
+                "abbreviation": team_data["team_abbr"],
+                "city": self._get_city(
+                    team_data["team_name"],
+                    team_data["team_nick"]
+                )
+            }
+        )
+        return team_season
 
     @staticmethod
     def _get_city(team_name, nickname) -> str:

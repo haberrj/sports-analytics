@@ -53,6 +53,8 @@ class Game(models.Model):
     home_score = models.PositiveSmallIntegerField(null=True, blank=True)
     away_score = models.PositiveSmallIntegerField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.SCHEDULED)
+    phase = models.CharField(max_length=50, blank=True)
+    series_game_number = models.PositiveSmallIntegerField(null=True, blank=True)
     finish_type = models.CharField(max_length=20, choices=FinishType.choices, null=True, blank=True)
     neutral_site = models.BooleanField(default=False)
 

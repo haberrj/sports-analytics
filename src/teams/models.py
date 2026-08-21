@@ -118,7 +118,7 @@ class TeamSeason(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.team} - {self.season}"
+        return f"{self.city} {self.name} - {self.season}"
 
     def clean(self):
         super().clean()
