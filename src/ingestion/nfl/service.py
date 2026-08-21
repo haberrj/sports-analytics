@@ -4,6 +4,7 @@ from ingestion.nfl.base import NFLIngestor
 from ingestion.nfl.games import NFLGameIngestor
 from ingestion.nfl.team_stats import NFLTeamStatsIngestor
 from ingestion.nfl.teams import NFLTeamIngestor
+from ingestion.results import IngestionResult
 from ingestion.services import LeagueIngestionService
 
 
@@ -16,7 +17,7 @@ class NFLIngestionService(LeagueIngestionService):
 
         return sorted(schedules["season"].drop_nulls().unique().to_list())
 
-    def ingest_season(self, season: int) -> None:
+    def ingest_season(self, season: int) -> dict[str, IngestionResult]:
         return {
             "teams": NFLTeamIngestor(season).ingest(),
             "games": NFLGameIngestor(season).ingest(),

@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand
 
 from ingestion.nfl.service import NFLIngestionService
+from ingestion.results import IngestionResult
 
 
 class Command(BaseCommand):
@@ -38,8 +39,12 @@ class Command(BaseCommand):
         self.stdout.write(f"[{index}/{total}] Ingesting NFL season {season}...")
 
     def _write_season_result(self, season: int, results: dict[str, bool]) -> None:
-        if not any(results.values()):
+        if all(result == IngestionResult.ALREADY_COMPLETE for result in results.values()):
             self.stdout.write(f"NFL season {season} has already been ingested.")
             return
-        ingested = [dataset for dataset, completed in results.items() if completed]
-        self.stdout.write(f"NFL season {season} ingested: {', '.join(ingested)}.")
+        ingested = [dataset for dataset, result in results.items() if result == IngestionResult.INGESTED]
+        unavailable = [dataset for dataset, result in results.items() if result == IngestionResult.UNAVAILABLE]
+        if ingested:
+            self.stdout.write(f"NFL season {season} ingested: {', '.join(ingested)}.")
+        if unavailable:
+            self.stdout.write(f"NFL season {season} unavailable: {', '.join(unavailable)}.")

@@ -9,6 +9,7 @@ from django.utils import timezone
 from games.models import Game, Season
 from ingestion.models import IngestionState
 from ingestion.nfl.team_stats import NFLTeamStatsIngestor
+from ingestion.results import IngestionResult
 from stats.models import NFLTeamGameStats
 from teams.models import League, Team, TeamSeason
 
@@ -476,7 +477,7 @@ def test_completed_team_stats_do_not_reload_source(
 
     result = NFLTeamStatsIngestor(2025).ingest()
 
-    assert result is False
+    assert result == IngestionResult.ALREADY_COMPLETE
 
     mock_load_team_stats.assert_not_called()
     mock_load_teams.assert_not_called()
@@ -508,7 +509,7 @@ def test_force_reloads_completed_team_stats(
         force=True,
     ).ingest()
 
-    assert result is True
+    assert result is IngestionResult.INGESTED
 
     mock_load_team_stats.assert_called_once_with(2025)
 

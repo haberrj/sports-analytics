@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 
+from ingestion.results import IngestionResult
+
 
 class LeagueIngestionService(ABC):
     @abstractmethod
@@ -12,7 +14,7 @@ class LeagueIngestionService(ABC):
         pass
 
     @abstractmethod
-    def ingest_season(self, season: int) -> None:
+    def ingest_season(self, season: int) -> IngestionResult:
         pass
 
     def ingest_all_seasons(
