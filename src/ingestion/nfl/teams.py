@@ -4,8 +4,8 @@ import nflreadpy as nfl
 from django.utils.text import slugify
 from polars import DataFrame
 
-from teams.models import Conference, Division, League, Team, TeamSeason
 from games.models import Season
+from teams.models import Conference, Division, League, Team, TeamSeason
 
 
 class NFLTeamIngestor:

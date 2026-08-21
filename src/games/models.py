@@ -57,6 +57,7 @@ class Game(models.Model):
     series_game_number = models.PositiveSmallIntegerField(null=True, blank=True)
     finish_type = models.CharField(max_length=20, choices=FinishType.choices, null=True, blank=True)
     neutral_site = models.BooleanField(default=False)
+    last_synced_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         constraints = [
