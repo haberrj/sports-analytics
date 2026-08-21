@@ -5,12 +5,15 @@ import nflreadpy as nfl
 from polars import DataFrame
 
 from games.models import Game, Season, Week
+from ingestion.models import IngestionState
 from ingestion.nfl.base import NFLIngestor
 from ingestion.nfl.teams import NFLTeamIngestor
 from teams.models import League, Team, TeamSeason
 
 
 class NFLGameIngestor(NFLIngestor):
+    dataset = IngestionState.Dataset.GAMES
+
     NFL_PHASES = {
         "PRE": "preseason",
         "REG": "regular_season",
@@ -27,14 +30,23 @@ class NFLGameIngestor(NFLIngestor):
         "SB": "Super Bowl",
     }
 
-    def __init__(self, season: int | None = None) -> None:
-        super().__init__(season)
-        self.schedule: DataFrame = nfl.load_schedules([self.season])
+    def __init__(self, season: int | None = None, force: bool = False) -> None:
+        super().__init__(season, force)
+        self.schedule: DataFrame
 
     def ingest(self) -> None:
         NFLTeamIngestor(self.season).ingest()  # idempotent call for safety
 
         league = League.objects.get(abbreviation="NFL")
+        season = Season.objects.get(
+            league__abbreviation="NFL",
+            name=str(self.season),
+        )
+
+        if season is not None and not self.should_ingest(season):
+            return
+
+        self.schedule = nfl.load_schedules([self.season])
         season = self._update_or_create_season(league)
 
         for game_data in self.schedule.iter_rows(named=True):
@@ -134,7 +146,7 @@ class NFLGameIngestor(NFLIngestor):
         return Game.FinishType.REGULATION
 
     @staticmethod
-    def _get_start_time(game_data: dict) -> datetime:
+    def _get_start_time(game_data: dict) -> datetime | None:
         if not game_data["gametime"]:
             return None
 

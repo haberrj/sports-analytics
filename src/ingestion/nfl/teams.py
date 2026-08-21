@@ -5,6 +5,7 @@ from django.utils.text import slugify
 from polars import DataFrame
 
 from games.models import Season
+from ingestion.models import IngestionState
 from ingestion.nfl.base import NFLIngestor
 from teams.models import Conference, Division, League, Team, TeamSeason
 
@@ -20,14 +21,21 @@ class NFLTeamIngestor(NFLIngestor):
     Running ingestion repeatedly should be idempotent.
     """
 
-    def __init__(self, season: int | None = None) -> None:
-        super().__init__(season)
+    dataset = IngestionState.Dataset.TEAMS
+
+    def __init__(self, season: int | None = None, force: bool = False) -> None:
+        super().__init__(season, force)
         self.is_current_season: bool = self.season == self.get_current_season()
-        self.teams: DataFrame = nfl.load_teams()
+        self.teams: DataFrame
 
     def ingest(self) -> None:
         league = self._get_or_create_league()
         season = self._get_or_create_season(league)
+
+        if not self.should_ingest(season):
+            return
+
+        self.teams = nfl.load_teams()
         season_teams = self._get_season_franchises()
 
         for team_data in season_teams.iter_rows(named=True):
