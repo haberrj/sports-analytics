@@ -7,6 +7,7 @@ from polars import DataFrame
 from games.models import Game, Season, Week
 from ingestion.models import IngestionState
 from ingestion.nfl.base import NFLIngestor
+from ingestion.results import IngestionResult
 from teams.models import League, Team, TeamSeason
 
 
@@ -33,15 +34,16 @@ class NFLGameIngestor(NFLIngestor):
         super().__init__(season, force)
         self.schedule: DataFrame
 
-    def ingest(self) -> bool:
+    def ingest(self) -> IngestionResult:
         league = League.objects.get(abbreviation="NFL")
         season = Season.objects.get(
             league__abbreviation="NFL",
             name=str(self.season),
         )
 
-        if season is not None and not self.should_ingest(season):
-            return False
+        if not self.should_ingest(season):
+            return IngestionResult.ALREADY_COMPLETE
+
 
         self.schedule = nfl.load_schedules([self.season])
         season = self._update_or_create_season(league)
@@ -54,7 +56,7 @@ class NFLGameIngestor(NFLIngestor):
                 season=season, week=week, home_team=home_team, away_team=away_team, game_data=game_data
             )
         self.complete(season)
-        return True
+        return IngestionResult.INGESTED
 
     def _update_or_create_season(self, league: League) -> Season:
         game_dates = [

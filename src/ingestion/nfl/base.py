@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from datetime import date
 
 from games.models import Season
+from ingestion.results import IngestionResult
 from ingestion.state import is_complete, mark_complete
 
 
@@ -30,5 +31,5 @@ class NFLIngestor(ABC):
         mark_complete(season, self.dataset)
 
     @abstractmethod
-    def ingest(self) -> None:
+    def ingest(self) -> IngestionResult:
         pass

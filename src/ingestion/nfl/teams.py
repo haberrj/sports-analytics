@@ -7,6 +7,7 @@ from polars import DataFrame
 from games.models import Season
 from ingestion.models import IngestionState
 from ingestion.nfl.base import NFLIngestor
+from ingestion.results import IngestionResult
 from teams.models import Conference, Division, League, Team, TeamSeason
 
 
@@ -28,12 +29,12 @@ class NFLTeamIngestor(NFLIngestor):
         self.is_current_season: bool = self.season == self.get_current_season()
         self.teams: DataFrame
 
-    def ingest(self) -> bool:
+    def ingest(self) -> IngestionResult:
         league = self._get_or_create_league()
         season = self._get_or_create_season(league)
 
         if not self.should_ingest(season):
-            return False
+            return IngestionResult.ALREADY_COMPLETE
 
         self.teams = nfl.load_teams()
         season_teams = self._get_season_franchises()
@@ -46,7 +47,7 @@ class NFLTeamIngestor(NFLIngestor):
                 team=team, division=division, conference=conference, season=season, team_data=team_data
             )
         self.complete(season)
-        return True
+        return IngestionResult.INGESTED
 
     def _get_or_create_league(self) -> League:
         league, _ = League.objects.update_or_create(

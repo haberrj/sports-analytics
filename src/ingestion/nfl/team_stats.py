@@ -4,6 +4,7 @@ from polars import DataFrame
 from games.models import Game, Season
 from ingestion.models import IngestionState
 from ingestion.nfl.base import NFLIngestor
+from ingestion.results import IngestionResult
 from stats.models import NFLTeamGameStats
 from teams.models import Team
 
@@ -23,11 +24,11 @@ class NFLTeamStatsIngestor(NFLIngestor):
         )
 
         if not self.should_ingest(season):
-            return False
+            return IngestionResult.ALREADY_COMPLETE
         try:
             self.stats = nfl.load_team_stats(self.season)
         except ConnectionError:
-            return False
+            return IngestionResult.UNAVAILABLE
         self.teams = nfl.load_teams()
 
         for team_data in self.stats.iter_rows(named=True):
@@ -84,7 +85,7 @@ class NFLTeamStatsIngestor(NFLIngestor):
                 },
             )
         self.complete(season)
-        return True
+        return IngestionResult.INGESTED
 
     def _get_opponent_data(self, team_data: dict) -> dict:
         opponent = self.stats.filter(
