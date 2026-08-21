@@ -17,6 +17,8 @@ class NFLIngestionService(LeagueIngestionService):
         return sorted(schedules["season"].drop_nulls().unique().to_list())
 
     def ingest_season(self, season: int) -> None:
-        NFLTeamIngestor(season).ingest()
-        NFLGameIngestor(season).ingest()
-        NFLTeamStatsIngestor(season).ingest()
+        return {
+            "teams": NFLTeamIngestor(season).ingest(),
+            "games": NFLGameIngestor(season).ingest(),
+            "team_stats": NFLTeamStatsIngestor(season).ingest(),
+        }

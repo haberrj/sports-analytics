@@ -24,22 +24,22 @@ class NFLTeamGameStats(models.Model):
 
     game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name="nfl_team_stats")
     team = models.ForeignKey(Team, on_delete=models.PROTECT, related_name="nfl_game_stats")
-    points_for = models.PositiveSmallIntegerField(default=0)
-    points_allowed = models.PositiveSmallIntegerField(default=0)
+    points_for = models.PositiveSmallIntegerField(null=True, blank=True)
+    points_allowed = models.PositiveSmallIntegerField(null=True, blank=True)
     # Offense
-    offensive_passing_yards = models.IntegerField(default=0)
-    passing_attempts = models.PositiveSmallIntegerField(default=0)
-    passing_completions = models.PositiveSmallIntegerField(default=0)
-    passing_epa = models.FloatField(default=0)
-    passing_cpoe = models.FloatField(default=0)
-    passing_air_yards = models.IntegerField(default=0)
-    passing_yards_after_catch = models.IntegerField(default=0)
+    offensive_passing_yards = models.IntegerField(null=True, blank=True)
+    passing_attempts = models.PositiveSmallIntegerField(null=True, blank=True)
+    passing_completions = models.PositiveSmallIntegerField(null=True, blank=True)
+    passing_epa = models.FloatField(null=True, blank=True)
+    passing_cpoe = models.FloatField(null=True, blank=True)
+    passing_air_yards = models.IntegerField(null=True, blank=True)
+    passing_yards_after_catch = models.IntegerField(null=True, blank=True)
 
-    offensive_rushing_yards = models.IntegerField(default=0)
-    rushing_attempts = models.PositiveSmallIntegerField(default=0)
-    rushing_epa = models.FloatField(default=0)
+    offensive_rushing_yards = models.IntegerField(null=True, blank=True)
+    rushing_attempts = models.PositiveSmallIntegerField(null=True, blank=True)
+    rushing_epa = models.FloatField(null=True, blank=True)
 
-    sacks_allowed = models.PositiveSmallIntegerField(default=0)
+    sacks_allowed = models.PositiveSmallIntegerField(null=True, blank=True)
     # Downs are interpreted from data and a direct raw value isn't given by nflreadpy
     first_downs = models.PositiveSmallIntegerField(null=True, blank=True)
 
@@ -49,20 +49,20 @@ class NFLTeamGameStats(models.Model):
     fourth_down_attempts = models.PositiveSmallIntegerField(null=True, blank=True)
     fourth_down_conversions = models.PositiveSmallIntegerField(null=True, blank=True)
 
-    penalties = models.PositiveSmallIntegerField(default=0)
-    penalty_yards = models.PositiveSmallIntegerField(default=0)
+    penalties = models.PositiveSmallIntegerField(null=True, blank=True)
+    penalty_yards = models.PositiveSmallIntegerField(null=True, blank=True)
 
-    offensive_turnovers = models.PositiveSmallIntegerField(default=0)
+    offensive_turnovers = models.PositiveSmallIntegerField(null=True, blank=True)
     # Defense
-    defensive_sacks = models.FloatField(default=0)
-    defensive_passing_yards_allowed = models.IntegerField(default=0)
-    defensive_rushing_yards_allowed = models.IntegerField(default=0)
-    defensive_turnovers_forced = models.PositiveSmallIntegerField(default=0)
-    defensive_qb_hits = models.PositiveSmallIntegerField(default=0)
-    defensive_tackles_for_loss = models.PositiveSmallIntegerField(default=0)
+    defensive_sacks = models.FloatField(null=True, blank=True)
+    defensive_passing_yards_allowed = models.IntegerField(null=True, blank=True)
+    defensive_rushing_yards_allowed = models.IntegerField(null=True, blank=True)
+    defensive_turnovers_forced = models.PositiveSmallIntegerField(null=True, blank=True)
+    defensive_qb_hits = models.PositiveSmallIntegerField(null=True, blank=True)
+    defensive_tackles_for_loss = models.PositiveSmallIntegerField(null=True, blank=True)
     # Special Teams
-    field_goals_made = models.PositiveSmallIntegerField(default=0)
-    field_goals_attempted = models.PositiveSmallIntegerField(default=0)
+    field_goals_made = models.PositiveSmallIntegerField(null=True, blank=True)
+    field_goals_attempted = models.PositiveSmallIntegerField(null=True, blank=True)
 
     class Meta:
         constraints = [

@@ -28,12 +28,12 @@ class NFLTeamIngestor(NFLIngestor):
         self.is_current_season: bool = self.season == self.get_current_season()
         self.teams: DataFrame
 
-    def ingest(self) -> None:
+    def ingest(self) -> bool:
         league = self._get_or_create_league()
         season = self._get_or_create_season(league)
 
         if not self.should_ingest(season):
-            return
+            return False
 
         self.teams = nfl.load_teams()
         season_teams = self._get_season_franchises()
@@ -46,6 +46,7 @@ class NFLTeamIngestor(NFLIngestor):
                 team=team, division=division, conference=conference, season=season, team_data=team_data
             )
         self.complete(season)
+        return True
 
     def _get_or_create_league(self) -> League:
         league, _ = League.objects.update_or_create(

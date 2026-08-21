@@ -5,7 +5,7 @@ from games.models import Game, Season
 from ingestion.models import IngestionState
 from ingestion.nfl.base import NFLIngestor
 from stats.models import NFLTeamGameStats
-from teams.models import Team, TeamSeason
+from teams.models import Team
 
 
 class NFLTeamStatsIngestor(NFLIngestor):
@@ -14,33 +14,33 @@ class NFLTeamStatsIngestor(NFLIngestor):
     def __init__(self, season: int | None = None, force: bool = False) -> None:
         super().__init__(season, force)
         self.stats: DataFrame
+        self.teams: DataFrame
 
-    def ingest(self) -> None:
+    def ingest(self) -> bool:
         season = Season.objects.get(
             league__abbreviation="NFL",
             name=str(self.season),
         )
 
         if not self.should_ingest(season):
-            return
-
-        self.stats = nfl.load_team_stats(self.season)
+            return False
+        try:
+            self.stats = nfl.load_team_stats(self.season)
+        except ConnectionError:
+            return False
+        self.teams = nfl.load_teams()
 
         for team_data in self.stats.iter_rows(named=True):
+            if team_data["team"] is None or team_data["game_id"] is None:
+                continue
+
             opponent_data = self._get_opponent_data(team_data)
 
             game = Game.objects.get(
                 external_id=team_data["game_id"],
             )
 
-            team = (
-                TeamSeason.objects.select_related("team")
-                .get(
-                    season=game.season,
-                    abbreviation=team_data["team"],
-                )
-                .team
-            )
+            team = self._get_team(team_data)
 
             NFLTeamGameStats.objects.update_or_create(
                 game=game,
@@ -68,9 +68,15 @@ class NFLTeamStatsIngestor(NFLIngestor):
                     "penalty_yards": team_data["penalty_yards"],
                     "offensive_turnovers": self._get_offensive_turnovers(team_data),
                     "defensive_sacks": team_data["def_sacks"],
-                    "defensive_passing_yards_allowed": opponent_data["passing_yards"],
-                    "defensive_rushing_yards_allowed": opponent_data["rushing_yards"],
-                    "defensive_turnovers_forced": self._get_offensive_turnovers(opponent_data),
+                    "defensive_passing_yards_allowed": (
+                        opponent_data["passing_yards"] if opponent_data is not None else None
+                    ),
+                    "defensive_rushing_yards_allowed": (
+                        opponent_data["rushing_yards"] if opponent_data is not None else None
+                    ),
+                    "defensive_turnovers_forced": (
+                        self._get_offensive_turnovers(opponent_data) if opponent_data is not None else None
+                    ),
                     "defensive_qb_hits": team_data["def_qb_hits"],
                     "defensive_tackles_for_loss": team_data["def_tackles_for_loss"],
                     "field_goals_made": team_data["fg_made"],
@@ -78,25 +84,46 @@ class NFLTeamStatsIngestor(NFLIngestor):
                 },
             )
         self.complete(season)
+        return True
 
     def _get_opponent_data(self, team_data: dict) -> dict:
         opponent = self.stats.filter(
-            (self.stats["game_id"] == team_data["game_id"]) & (self.stats["team"] == team_data["opponent_team"])
+            (self.stats["game_id"] == team_data["game_id"]) & (self.stats["team"] != team_data["team"])
         )
 
         rows = opponent.to_dicts()
 
-        if len(rows) != 1:
+        if len(rows) == 0:
+            return None
+
+        if len(rows) > 1:
             raise ValueError(
-                f"Expected one opponent row for {team_data['game_id']} "
-                f"and {team_data['opponent_team']}, found {len(rows)}."
+                f"Expected one opponent row for {team_data['game_id']} and team {team_data['team']}, found {len(rows)}."
             )
 
         return rows[0]
 
+    def _get_team(self, team_data: dict) -> Team:
+        team_rows = self.teams.filter(self.teams["team_abbr"] == team_data["team"])
+
+        rows = team_rows.to_dicts()
+
+        if len(rows) != 1:
+            raise ValueError(f"Expected one team row for {team_data['team']}, found {len(rows)}.")
+
+        return Team.objects.get(
+            external_id=rows[0]["team_id"],
+        )
+
     @staticmethod
-    def _get_offensive_turnovers(team_data: dict) -> int:
-        return team_data["passing_interceptions"] + team_data["fumbles_lost_total"]
+    def _get_offensive_turnovers(team_data: dict) -> int | None:
+        interceptions = team_data["passing_interceptions"]
+        fumbles_lost = team_data["fumbles_lost_total"]
+
+        if interceptions is None or fumbles_lost is None:
+            return None
+
+        return interceptions + fumbles_lost
 
     @staticmethod
     def _get_points_for(game: Game, team: Team) -> int:

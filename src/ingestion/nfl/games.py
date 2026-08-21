@@ -33,7 +33,7 @@ class NFLGameIngestor(NFLIngestor):
         super().__init__(season, force)
         self.schedule: DataFrame
 
-    def ingest(self) -> None:
+    def ingest(self) -> bool:
         league = League.objects.get(abbreviation="NFL")
         season = Season.objects.get(
             league__abbreviation="NFL",
@@ -41,7 +41,7 @@ class NFLGameIngestor(NFLIngestor):
         )
 
         if season is not None and not self.should_ingest(season):
-            return
+            return False
 
         self.schedule = nfl.load_schedules([self.season])
         season = self._update_or_create_season(league)
@@ -54,6 +54,7 @@ class NFLGameIngestor(NFLIngestor):
                 season=season, week=week, home_team=home_team, away_team=away_team, game_data=game_data
             )
         self.complete(season)
+        return True
 
     def _update_or_create_season(self, league: League) -> Season:
         game_dates = [

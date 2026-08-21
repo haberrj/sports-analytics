@@ -41,10 +41,55 @@ def test_ingest_nfl_all_seasons(mock_service_class):
 def test_ingest_nfl_all_outputs_progress(mock_service_class):
     service = mock_service_class.return_value
 
-    def fake_ingest_all(on_season_start=None):
-        on_season_start(2023, 1, 3)
-        on_season_start(2024, 2, 3)
-        on_season_start(2025, 3, 3)
+    def fake_ingest_all(
+        on_season_start=None,
+        on_season_complete=None,
+    ):
+        seasons = [
+            (
+                2023,
+                {
+                    "teams": False,
+                    "games": False,
+                    "team_stats": False,
+                },
+            ),
+            (
+                2024,
+                {
+                    "teams": False,
+                    "games": True,
+                    "team_stats": True,
+                },
+            ),
+            (
+                2025,
+                {
+                    "teams": True,
+                    "games": True,
+                    "team_stats": True,
+                },
+            ),
+        ]
+
+        total = len(seasons)
+
+        for index, (season, results) in enumerate(
+            seasons,
+            start=1,
+        ):
+            if on_season_start:
+                on_season_start(
+                    season,
+                    index,
+                    total,
+                )
+
+            if on_season_complete:
+                on_season_complete(
+                    season,
+                    results,
+                )
 
     service.ingest_all_seasons.side_effect = fake_ingest_all
 
