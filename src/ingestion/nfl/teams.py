@@ -5,10 +5,11 @@ from django.utils.text import slugify
 from polars import DataFrame
 
 from games.models import Season
+from ingestion.nfl.base import NFLIngestor
 from teams.models import Conference, Division, League, Team, TeamSeason
 
 
-class NFLTeamIngestor:
+class NFLTeamIngestor(NFLIngestor):
     """
     Ingests NFL league structure and current franchise data from nflverse.
 
@@ -20,9 +21,8 @@ class NFLTeamIngestor:
     """
 
     def __init__(self, season: int | None = None) -> None:
-        default_season: int = self._default_season()
-        self.season: int = season if season is not None else default_season
-        self.is_current_season: bool = self.season == default_season
+        super().__init__(season)
+        self.is_current_season: bool = self.season == self.get_current_season()
         self.teams: DataFrame = nfl.load_teams()
 
     def ingest(self) -> None:
@@ -132,12 +132,3 @@ class NFLTeamIngestor:
     @staticmethod
     def _get_city(team_name, nickname) -> str:
         return team_name.removesuffix(nickname).strip()
-
-    @staticmethod
-    def _default_season() -> int:
-        today = date.today()
-
-        if today.month <= 2:
-            return today.year - 1
-
-        return today.year

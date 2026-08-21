@@ -5,11 +5,12 @@ import nflreadpy as nfl
 from polars import DataFrame
 
 from games.models import Game, Season, Week
+from ingestion.nfl.base import NFLIngestor
 from ingestion.nfl.teams import NFLTeamIngestor
 from teams.models import League, Team, TeamSeason
 
 
-class NFLGameIngestor:
+class NFLGameIngestor(NFLIngestor):
     NFL_PHASES = {
         "PRE": "preseason",
         "REG": "regular_season",
@@ -27,8 +28,7 @@ class NFLGameIngestor:
     }
 
     def __init__(self, season: int | None = None) -> None:
-        default_season: int = NFLTeamIngestor._default_season()
-        self.season: int = season if season is not None else default_season
+        super().__init__(season)
         self.schedule: DataFrame = nfl.load_schedules([self.season])
 
     def ingest(self) -> None:

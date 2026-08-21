@@ -90,7 +90,7 @@ def test_team_ingestion_is_idempotent(
 
 
 @pytest.mark.django_db
-@patch("ingestion.nfl.teams.NFLTeamIngestor._default_season")
+@patch("ingestion.nfl.base.NFLIngestor.get_current_season")
 @patch("ingestion.nfl.teams.nfl.load_schedules")
 @patch("ingestion.nfl.teams.nfl.load_teams")
 def test_historical_ingestion_does_not_overwrite_current_team_identity(
