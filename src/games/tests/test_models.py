@@ -29,6 +29,7 @@ def season(nfl):
 @pytest.fixture
 def bills():
     return Team.objects.create(
+        external_id="0610",
         slug="nfl-buf",
         name="Bills",
         abbreviation="BUF",
@@ -39,6 +40,7 @@ def bills():
 @pytest.fixture
 def jets():
     return Team.objects.create(
+        external_id="3430",
         slug="nfl-nyj",
         name="Jets",
         abbreviation="NYJ",
@@ -49,6 +51,7 @@ def jets():
 @pytest.fixture
 def leafs():
     return Team.objects.create(
+        external_id="nhl-tor",
         slug="nhl-tor",
         name="Maple Leafs",
         abbreviation="TOR",
