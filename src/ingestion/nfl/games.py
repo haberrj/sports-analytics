@@ -33,26 +33,16 @@ class NFLGameIngestor:
 
     def ingest(self) -> None:
         NFLTeamIngestor(self.season).ingest()  # idempotent call for safety
-        
+
         league = League.objects.get(abbreviation="NFL")
         season = self._update_or_create_season(league)
 
         for game_data in self.schedule.iter_rows(named=True):
             week = self._update_or_create_week(season, game_data)
-            home_team = self._get_team(
-                season=season,
-                abbreviation=game_data['home_team']
-            )
-            away_team = self._get_team(
-                season=season,
-                abbreviation=game_data['away_team']
-            )
+            home_team = self._get_team(season=season, abbreviation=game_data["home_team"])
+            away_team = self._get_team(season=season, abbreviation=game_data["away_team"])
             self._update_or_create_game(
-                season=season,
-                week=week,
-                home_team=home_team,
-                away_team=away_team,
-                game_data=game_data
+                season=season, week=week, home_team=home_team, away_team=away_team, game_data=game_data
             )
 
     def _update_or_create_season(self, league: League) -> Season:
@@ -87,13 +77,18 @@ class NFLGameIngestor:
         return week
 
     def _get_team(self, season: Season, abbreviation: str) -> Team:
-        return TeamSeason.objects.select_related("team").get(
-            season=season,
-            abbreviation=abbreviation,
-        ).team
+        return (
+            TeamSeason.objects.select_related("team")
+            .get(
+                season=season,
+                abbreviation=abbreviation,
+            )
+            .team
+        )
 
-    def _update_or_create_game(self, season: Season, week: Week, home_team: Team, 
-                               away_team: Team, game_data: dict) -> Game:
+    def _update_or_create_game(
+        self, season: Season, week: Week, home_team: Team, away_team: Team, game_data: dict
+    ) -> Game:
         game, _ = Game.objects.update_or_create(
             external_id=game_data["game_id"],
             defaults={

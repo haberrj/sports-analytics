@@ -35,11 +35,7 @@ class NFLTeamIngestor:
             division = self._get_or_create_division(conference, team_data)
             team = self._update_or_create_team(team_data)
             self._update_or_create_team_season(
-                team=team,
-                division=division,
-                conference=conference,
-                season=season,
-                team_data=team_data
+                team=team, division=division, conference=conference, season=season, team_data=team_data
             )
 
     def _get_or_create_league(self) -> League:
@@ -112,13 +108,14 @@ class NFLTeamIngestor:
             name=str(self.season),
             defaults={
                 "start_date": date(self.season, 9, 1),  # Expanded season hard coded dates to be changed later
-                "end_date": date(self.season + 1, 2, 28)
-            }
+                "end_date": date(self.season + 1, 2, 28),
+            },
         )
         return season
 
-    def _update_or_create_team_season(self, team: Team, season: Season, conference: Conference, 
-                                      division: Division, team_data: DataFrame) -> TeamSeason:
+    def _update_or_create_team_season(
+        self, team: Team, season: Season, conference: Conference, division: Division, team_data: DataFrame
+    ) -> TeamSeason:
         team_season, _ = TeamSeason.objects.update_or_create(
             team=team,
             season=season,
@@ -127,11 +124,8 @@ class NFLTeamIngestor:
                 "division": division,
                 "name": team_data["team_nick"],
                 "abbreviation": team_data["team_abbr"],
-                "city": self._get_city(
-                    team_data["team_name"],
-                    team_data["team_nick"]
-                )
-            }
+                "city": self._get_city(team_data["team_name"], team_data["team_nick"]),
+            },
         )
         return team_season
 
