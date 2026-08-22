@@ -131,6 +131,51 @@ class NFLTeamProfile(models.Model):
     rush_defense_yards_per_attempt_strength = models.FloatField(null=True, blank=True)
     rush_defense_yards_per_game_strength = models.FloatField(null=True, blank=True)
 
+    # Scoring
+    points_for_per_game = models.FloatField(null=True, blank=True)
+    points_allowed_per_game = models.FloatField(null=True, blank=True)
+    point_differential_per_game = models.FloatField(null=True, blank=True)
+
+    # Passing detail
+    pass_attempts_per_game = models.FloatField(null=True, blank=True)
+    pass_completion_percentage = models.FloatField(null=True, blank=True)
+    pass_air_yards_per_attempt = models.FloatField(null=True, blank=True)
+    pass_yards_after_catch_per_completion = models.FloatField(null=True, blank=True)
+    pass_cpoe = models.FloatField(null=True, blank=True)
+    pass_epa_per_attempt = models.FloatField(null=True, blank=True)
+
+    # Rushing detail
+    rush_attempts_per_game = models.FloatField(null=True, blank=True)
+    rush_epa_per_attempt = models.FloatField(null=True, blank=True)
+
+    # Protection
+    sacks_allowed_per_game = models.FloatField(null=True, blank=True)
+
+    # Downs
+    first_downs_per_game = models.FloatField(null=True, blank=True)
+    third_down_conversion_rate = models.FloatField(null=True, blank=True)
+    fourth_down_conversion_rate = models.FloatField(null=True, blank=True)
+
+    # Discipline
+    penalties_per_game = models.FloatField(null=True, blank=True)
+    penalty_yards_per_game = models.FloatField(null=True, blank=True)
+
+    # Turnovers
+    offensive_turnovers_per_game = models.FloatField(null=True, blank=True)
+    defensive_turnovers_forced_per_game = models.FloatField(null=True, blank=True)
+    turnover_differential_per_game = models.FloatField(null=True, blank=True)
+
+    # Defensive volume / pressure
+    opponent_pass_attempts_per_game = models.FloatField(null=True, blank=True)
+    opponent_rush_attempts_per_game = models.FloatField(null=True, blank=True)
+    defensive_sacks_per_game = models.FloatField(null=True, blank=True)
+    defensive_qb_hits_per_game = models.FloatField(null=True, blank=True)
+    defensive_tackles_for_loss_per_game = models.FloatField(null=True, blank=True)
+
+    # Special teams
+    field_goals_made_per_game = models.FloatField(null=True, blank=True)
+    field_goal_percentage = models.FloatField(null=True, blank=True)
+
     class Meta:
         constraints = [
             models.UniqueConstraint(
