@@ -123,10 +123,10 @@ class NFLDerivedStatsService:
 
     @staticmethod
     def _relative_defensive_strength(team_value: float | None, league_value: float | None) -> float | None:
-        strength = NFLDerivedStatsService._safe_divide(league_value, team_value)
+        strength = NFLDerivedStatsService._safe_divide(team_value, league_value)
         if strength is None:
             return None
-        return strength - 1
+        return 1 - strength
 
     @staticmethod
     def _aggregate_stats(stats: QuerySet[NFLTeamGameStats]) -> dict:

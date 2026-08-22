@@ -753,7 +753,7 @@ def test_relative_defensive_strength_better_than_league_average():
         league_value=7.5,
     )
 
-    assert strength == pytest.approx(0.25)
+    assert strength == pytest.approx(0.20)
 
 
 def test_relative_defensive_strength_worse_than_league_average():
@@ -762,7 +762,7 @@ def test_relative_defensive_strength_worse_than_league_average():
         league_value=6.0,
     )
 
-    assert strength == pytest.approx(-0.20)
+    assert strength == pytest.approx(-0.25)
 
 
 def test_relative_value_above_league_average():
@@ -936,28 +936,28 @@ def test_get_team_relative_metrics_through_week():
     #
     # Defense is inverted:
     # league / team - 1
-    assert relative["pass_defense_yards_per_attempt_strength"] == pytest.approx(((480 / 70) / 6.0) - 1)
+    assert relative["pass_defense_yards_per_attempt_strength"] == pytest.approx(1 - (6.0 / (480 / 70)))
 
     # League rushing defense:
     # 200 yards allowed / 44 opponent attempts
     #
     # Bills:
     # 80 / 20 = 4.0
-    assert relative["rush_defense_yards_per_attempt_strength"] == pytest.approx(((200 / 44) / 4.0) - 1)
+    assert relative["rush_defense_yards_per_attempt_strength"] == pytest.approx(1 - (4.0 / (200 / 44)))
 
     # League passing yards allowed/game:
     # 480 / 2 = 240
     #
     # Bills:
     # 180
-    assert relative["pass_defense_yards_per_game_strength"] == pytest.approx((240 / 180) - 1)
+    assert relative["pass_defense_yards_per_game_strength"] == pytest.approx(1 - (180 / 240))
 
     # League rushing yards allowed/game:
     # 200 / 2 = 100
     #
     # Bills:
     # 80
-    assert relative["rush_defense_yards_per_game_strength"] == pytest.approx((100 / 80) - 1)
+    assert relative["rush_defense_yards_per_game_strength"] == pytest.approx(1 - (80 / 100))
 
 
 @pytest.mark.django_db
