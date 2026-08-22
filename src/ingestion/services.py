@@ -14,11 +14,12 @@ class LeagueIngestionService(ABC):
         pass
 
     @abstractmethod
-    def ingest_season(self, season: int) -> IngestionResult:
+    def ingest_season(self, season: int, force: bool = False) -> IngestionResult:
         pass
 
     def ingest_all_seasons(
         self,
+        force: bool = False,
         on_season_start: Callable[[int, int, int], None] | None = None,
         on_season_complete: Callable[[int, int, int], None] | None = None,
     ) -> None:
@@ -29,7 +30,7 @@ class LeagueIngestionService(ABC):
             if on_season_start:
                 on_season_start(season, index, total)
 
-            results = self.ingest_season(season)
+            results = self.ingest_season(season, force)
 
             if on_season_complete:
                 on_season_complete(season, results)

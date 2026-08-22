@@ -17,13 +17,13 @@ class NFLTeamStatsIngestor(NFLIngestor):
         self.stats: DataFrame
         self.teams: DataFrame
 
-    def ingest(self) -> bool:
+    def ingest(self) -> IngestionResult:
         season = Season.objects.get(
             league__abbreviation="NFL",
             name=str(self.season),
         )
 
-        if not self.should_ingest(season):
+        if not self.should_ingest(season) and not self.force:
             return IngestionResult.ALREADY_COMPLETE
         try:
             self.stats = nfl.load_team_stats(self.season)
@@ -78,6 +78,8 @@ class NFLTeamStatsIngestor(NFLIngestor):
                     "defensive_turnovers_forced": (
                         self._get_offensive_turnovers(opponent_data) if opponent_data is not None else None
                     ),
+                    "opponent_passing_attempts": (opponent_data["attempts"] if opponent_data is not None else None),
+                    "opponent_rushing_attempts": (opponent_data["carries"] if opponent_data is not None else None),
                     "defensive_qb_hits": team_data["def_qb_hits"],
                     "defensive_tackles_for_loss": team_data["def_tackles_for_loss"],
                     "field_goals_made": team_data["fg_made"],
@@ -87,7 +89,7 @@ class NFLTeamStatsIngestor(NFLIngestor):
         self.complete(season)
         return IngestionResult.INGESTED
 
-    def _get_opponent_data(self, team_data: dict) -> dict:
+    def _get_opponent_data(self, team_data: dict) -> dict | None:
         opponent = self.stats.filter(
             (self.stats["game_id"] == team_data["game_id"]) & (self.stats["team"] != team_data["team"])
         )

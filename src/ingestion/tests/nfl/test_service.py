@@ -1,8 +1,13 @@
-from unittest.mock import Mock, call, patch
+from unittest.mock import patch
 
 from ingestion.nfl.service import NFLIngestionService
+from ingestion.results import IngestionResult
 
 
+@patch.object(
+    NFLIngestionService,
+    "_generate_team_profiles",
+)
 @patch("ingestion.nfl.service.NFLTeamStatsIngestor")
 @patch("ingestion.nfl.service.NFLGameIngestor")
 @patch("ingestion.nfl.service.NFLTeamIngestor")
@@ -10,26 +15,40 @@ def test_ingest_season_runs_pipeline_in_order(
     mock_team_ingestor,
     mock_game_ingestor,
     mock_team_stats_ingestor,
+    mock_generate_team_profiles,
 ):
-    parent = Mock()
+    mock_team_ingestor.return_value.ingest.return_value = IngestionResult.INGESTED
+    mock_game_ingestor.return_value.ingest.return_value = IngestionResult.INGESTED
+    mock_team_stats_ingestor.return_value.ingest.return_value = IngestionResult.INGESTED
+    mock_generate_team_profiles.return_value = IngestionResult.INGESTED
 
-    parent.attach_mock(
-        mock_team_ingestor.return_value.ingest,
-        "teams",
-    )
-    parent.attach_mock(
-        mock_game_ingestor.return_value.ingest,
-        "games",
-    )
-    parent.attach_mock(
-        mock_team_stats_ingestor.return_value.ingest,
-        "team_stats",
+    service = NFLIngestionService()
+
+    results = service.ingest_season(
+        2025,
+        force=False,
     )
 
-    NFLIngestionService().ingest_season(2025)
+    mock_team_ingestor.assert_called_once_with(
+        2025,
+        force=False,
+    )
+    mock_game_ingestor.assert_called_once_with(
+        2025,
+        force=False,
+    )
+    mock_team_stats_ingestor.assert_called_once_with(
+        2025,
+        force=False,
+    )
 
-    assert parent.mock_calls == [
-        call.teams(),
-        call.games(),
-        call.team_stats(),
-    ]
+    mock_generate_team_profiles.assert_called_once_with(
+        2025,
+    )
+
+    assert results == {
+        "teams": IngestionResult.INGESTED,
+        "games": IngestionResult.INGESTED,
+        "team_stats": IngestionResult.INGESTED,
+        "team_profile": IngestionResult.INGESTED,
+    }

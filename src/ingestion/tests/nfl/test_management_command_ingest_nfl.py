@@ -11,7 +11,7 @@ def test_ingest_nfl_specific_season(mock_service_class):
 
     call_command("ingest_nfl", "--season", "2025")
 
-    service.ingest_season.assert_called_once_with(2025)
+    service.ingest_season.assert_called_once_with(2025, False)
     service.ingest_all_seasons.assert_not_called()
 
 
@@ -23,7 +23,7 @@ def test_ingest_nfl_defaults_to_current_season(mock_service_class):
     call_command("ingest_nfl")
 
     service.get_current_season.assert_called_once_with()
-    service.ingest_season.assert_called_once_with(2026)
+    service.ingest_season.assert_called_once_with(2026, False)
 
 
 @patch("ingestion.management.commands.ingest_nfl.NFLIngestionService")
@@ -41,10 +41,7 @@ def test_ingest_nfl_all_seasons(mock_service_class):
 def test_ingest_nfl_all_outputs_progress(mock_service_class):
     service = mock_service_class.return_value
 
-    def fake_ingest_all(
-        on_season_start=None,
-        on_season_complete=None,
-    ):
+    def fake_ingest_all(on_season_start=None, on_season_complete=None, force=False):
         seasons = [
             (
                 2023,

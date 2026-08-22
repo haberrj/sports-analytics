@@ -14,6 +14,8 @@ class Command(BaseCommand):
 
         group.add_argument("--all", action="store_true", help="Ingest all available NFL seasons.")
 
+        parser.add_argument("--force", action="store_true", help="Force re-ingestion of completed datasets.")
+
     def handle(self, *args, **options):
         service = NFLIngestionService()
 
@@ -21,17 +23,19 @@ class Command(BaseCommand):
             self.stdout.write("Ingesting all NFL seasons...")
 
             service.ingest_all_seasons(
-                on_season_start=self._write_season_progress, on_season_complete=self._write_season_result
+                force=options["force"],
+                on_season_start=self._write_season_progress,
+                on_season_complete=self._write_season_result,
             )
         elif options["season"] is not None:
             season = options["season"]
             self.stdout.write(f"Ingesting the {season} NFL season...")
-            results = service.ingest_season(season)
+            results = service.ingest_season(season, options["force"])
             self._write_season_result(season, results)
         else:
             default_season = service.get_current_season()
             self.stdout.write(f"Ingesting the {default_season} NFL season...")
-            results = service.ingest_season(default_season)
+            results = service.ingest_season(default_season, options["force"])
             self._write_season_result(default_season, results)
         self.stdout.write(self.style.SUCCESS("NFL ingestion complete."))
 
