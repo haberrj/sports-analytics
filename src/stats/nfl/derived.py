@@ -250,7 +250,7 @@ class NFLDerivedStatsService:
         team_ids = (
             NFLTeamGameStats.objects.filter(
                 game__season=week.season,
-                game__week__number__lte=week.number,
+                game__week=week,
             )
             .values_list("team_id", flat=True)
             .distinct()
