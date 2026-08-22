@@ -20,28 +20,12 @@ class NFLDerivedStatsService:
             team=team,
             week=week,
         )
-        return stats.aggregate(
-            games=Count("id"),
-            passing_yards=Sum("offensive_passing_yards"),
-            passing_attempts=Sum("passing_attempts"),
-            passing_completions=Sum("passing_completions"),
-            rushing_yards=Sum("offensive_rushing_yards"),
-            rushing_attempts=Sum("rushing_attempts"),
-            passing_epa=Sum("passing_epa"),
-            rushing_epa=Sum("rushing_epa"),
-            passing_yards_allowed=Sum("defensive_passing_yards_allowed"),
-            rushing_yards_allowed=Sum("defensive_rushing_yards_allowed"),
-            points_for=Sum("points_for"),
-            points_allowed=Sum("points_allowed"),
-            sacks_allowed=Sum("sacks_allowed"),
-            defensive_sacks=Sum("defensive_sacks"),
-            opponent_passing_attempts=Sum("opponent_passing_attempts"),
-            opponent_rushing_attempts=Sum("opponent_rushing_attempts"),
-            defensive_qb_hits=Sum("defensive_qb_hits"),
-            offensive_turnovers=Sum("offensive_turnovers"),
-            defensive_turnovers_forced=Sum("defensive_turnovers_forced"),
-            average_cpoe=Avg("passing_cpoe"),
-        )
+        return NFLDerivedStatsService._aggregate_stats(stats)
+
+    @staticmethod
+    def get_league_aggregate_through_week(week: Week) -> dict:
+        stats = NFLDerivedStatsService.get_league_stats_through_week(week)
+        return NFLDerivedStatsService._aggregate_stats(stats)
 
     @staticmethod
     def _safe_divide(numerator: int | float | None, denominator: int | float | None) -> float | None:
@@ -70,7 +54,48 @@ class NFLDerivedStatsService:
     @staticmethod
     def get_team_metrics_through_week(team: Team, week: Week) -> dict[str, float | None]:
         aggregate = NFLDerivedStatsService.get_team_aggregate_through_week(team=team, week=week)
-        games = aggregate["games"]
+        return NFLDerivedStatsService._get_metrics_from_aggregate(aggregate)
+
+    @staticmethod
+    def get_league_stats_through_week(week: Week) -> QuerySet[NFLTeamGameStats]:
+        return NFLTeamGameStats.objects.filter(
+            game__season=week.season,
+            game__week__number__lte=week.number,
+        )
+
+    @staticmethod
+    def get_league_metrics_through_week(week: Week) -> QuerySet[NFLTeamGameStats]:
+        aggregate = NFLDerivedStatsService.get_league_aggregate_through_week(week)
+        return NFLDerivedStatsService._get_metrics_from_aggregate(aggregate)
+
+    @staticmethod
+    def _aggregate_stats(stats: QuerySet[NFLTeamGameStats]) -> dict:
+        return stats.aggregate(
+            team_games=Count("id"),
+            passing_yards=Sum("offensive_passing_yards"),
+            passing_attempts=Sum("passing_attempts"),
+            passing_completions=Sum("passing_completions"),
+            rushing_yards=Sum("offensive_rushing_yards"),
+            rushing_attempts=Sum("rushing_attempts"),
+            passing_epa=Sum("passing_epa"),
+            rushing_epa=Sum("rushing_epa"),
+            passing_yards_allowed=Sum("defensive_passing_yards_allowed"),
+            rushing_yards_allowed=Sum("defensive_rushing_yards_allowed"),
+            opponent_passing_attempts=Sum("opponent_passing_attempts"),
+            opponent_rushing_attempts=Sum("opponent_rushing_attempts"),
+            points_for=Sum("points_for"),
+            points_allowed=Sum("points_allowed"),
+            sacks_allowed=Sum("sacks_allowed"),
+            defensive_sacks=Sum("defensive_sacks"),
+            defensive_qb_hits=Sum("defensive_qb_hits"),
+            offensive_turnovers=Sum("offensive_turnovers"),
+            defensive_turnovers_forced=Sum("defensive_turnovers_forced"),
+            average_cpoe=Avg("passing_cpoe"),
+        )
+
+    @staticmethod
+    def _get_metrics_from_aggregate(aggregate: dict) -> dict[str, float | None]:
+        team_games = aggregate["team_games"]
         return {
             # Efficiency
             "pass_offense_yards_per_attempt": NFLDerivedStatsService._safe_divide(
@@ -89,30 +114,32 @@ class NFLDerivedStatsService:
                 aggregate["rushing_yards_allowed"],
                 aggregate["opponent_rushing_attempts"],
             ),
+
             # Volume
             "pass_offense_yards_per_game": NFLDerivedStatsService._safe_divide(
                 aggregate["passing_yards"],
-                games,
+                team_games,
             ),
             "rush_offense_yards_per_game": NFLDerivedStatsService._safe_divide(
                 aggregate["rushing_yards"],
-                games,
+                team_games,
             ),
             "pass_defense_yards_per_game": NFLDerivedStatsService._safe_divide(
                 aggregate["passing_yards_allowed"],
-                games,
+                team_games,
             ),
             "rush_defense_yards_per_game": NFLDerivedStatsService._safe_divide(
                 aggregate["rushing_yards_allowed"],
-                games,
+                team_games,
             ),
+
             # Value
             "pass_offense_epa_per_game": NFLDerivedStatsService._safe_divide(
                 aggregate["passing_epa"],
-                games,
+                team_games,
             ),
             "rush_offense_epa_per_game": NFLDerivedStatsService._safe_divide(
                 aggregate["rushing_epa"],
-                games,
+                team_games,
             ),
         }
