@@ -34,24 +34,6 @@ class NFLDerivedStatsService:
         return numerator / denominator
 
     @staticmethod
-    def get_team_efficiency_through_week(team: Team, week: Week) -> dict[str, float | None]:
-        aggregate = NFLDerivedStatsService.get_team_aggregate_through_week(team=team, week=week)
-        return {
-            "pass_offense": NFLDerivedStatsService._safe_divide(
-                aggregate["passing_yards"], aggregate["passing_attempts"]
-            ),
-            "rush_offense": NFLDerivedStatsService._safe_divide(
-                aggregate["rushing_yards"], aggregate["rushing_attempts"]
-            ),
-            "pass_defense": NFLDerivedStatsService._safe_divide(
-                aggregate["passing_yards_allowed"], aggregate["opponent_passing_attempts"]
-            ),
-            "rush_defense": NFLDerivedStatsService._safe_divide(
-                aggregate["rushing_yards_allowed"], aggregate["opponent_rushing_attempts"]
-            ),
-        }
-
-    @staticmethod
     def get_team_metrics_through_week(team: Team, week: Week) -> dict[str, float | None]:
         aggregate = NFLDerivedStatsService.get_team_aggregate_through_week(team=team, week=week)
         return NFLDerivedStatsService._get_metrics_from_aggregate(aggregate)
@@ -64,9 +46,23 @@ class NFLDerivedStatsService:
         )
 
     @staticmethod
-    def get_league_metrics_through_week(week: Week) -> QuerySet[NFLTeamGameStats]:
+    def get_league_metrics_through_week(week: Week) -> dict[str, float | None]:
         aggregate = NFLDerivedStatsService.get_league_aggregate_through_week(week)
         return NFLDerivedStatsService._get_metrics_from_aggregate(aggregate)
+
+    @staticmethod
+    def _relative_offensive_strength(team_value: float | None, league_value: float | None) -> float | None:
+        strength = NFLDerivedStatsService._safe_divide(team_value, league_value)
+        if strength is None:
+            return None
+        return strength - 1
+
+    @staticmethod
+    def _relative_defensive_strength(team_value: float | None, league_value: float | None) -> float | None:
+        strength = NFLDerivedStatsService._safe_divide(league_value, team_value)
+        if strength is None:
+            return None
+        return strength - 1
 
     @staticmethod
     def _aggregate_stats(stats: QuerySet[NFLTeamGameStats]) -> dict:
@@ -114,7 +110,6 @@ class NFLDerivedStatsService:
                 aggregate["rushing_yards_allowed"],
                 aggregate["opponent_rushing_attempts"],
             ),
-
             # Volume
             "pass_offense_yards_per_game": NFLDerivedStatsService._safe_divide(
                 aggregate["passing_yards"],
@@ -132,7 +127,6 @@ class NFLDerivedStatsService:
                 aggregate["rushing_yards_allowed"],
                 team_games,
             ),
-
             # Value
             "pass_offense_epa_per_game": NFLDerivedStatsService._safe_divide(
                 aggregate["passing_epa"],
@@ -141,5 +135,37 @@ class NFLDerivedStatsService:
             "rush_offense_epa_per_game": NFLDerivedStatsService._safe_divide(
                 aggregate["rushing_epa"],
                 team_games,
+            ),
+        }
+
+    @staticmethod
+    def get_team_relative_strengths_through_week(
+        team: Team,
+        week: Week,
+    ) -> dict[str, float | None]:
+        team_metrics = NFLDerivedStatsService.get_team_metrics_through_week(
+            team=team,
+            week=week,
+        )
+        league_metrics = NFLDerivedStatsService.get_league_metrics_through_week(
+            week=week,
+        )
+
+        return {
+            "pass_offense_efficiency_strength": NFLDerivedStatsService._relative_offensive_strength(
+                team_metrics["pass_offense_yards_per_attempt"],
+                league_metrics["pass_offense_yards_per_attempt"],
+            ),
+            "rush_offense_efficiency_strength": NFLDerivedStatsService._relative_offensive_strength(
+                team_metrics["rush_offense_yards_per_attempt"],
+                league_metrics["rush_offense_yards_per_attempt"],
+            ),
+            "pass_defense_efficiency_strength": NFLDerivedStatsService._relative_defensive_strength(
+                team_metrics["pass_defense_yards_per_attempt"],
+                league_metrics["pass_defense_yards_per_attempt"],
+            ),
+            "rush_defense_efficiency_strength": NFLDerivedStatsService._relative_defensive_strength(
+                team_metrics["rush_defense_yards_per_attempt"],
+                league_metrics["rush_defense_yards_per_attempt"],
             ),
         }

@@ -528,6 +528,7 @@ def test_get_team_metrics_handles_missing_attempts():
     assert metrics["pass_offense_epa_per_game"] == pytest.approx(6.0)
     assert metrics["rush_offense_epa_per_game"] == pytest.approx(1.0)
 
+
 @pytest.mark.django_db
 def test_get_league_stats_through_week_only_returns_prior_games():
     league = League.objects.create(
@@ -610,6 +611,7 @@ def test_get_league_stats_through_week_only_returns_prior_games():
             flat=True,
         )
     ) == {1}
+
 
 @pytest.mark.django_db
 def test_get_league_metrics_through_week():
@@ -702,44 +704,60 @@ def test_get_league_metrics_through_week():
     # There are 2 team-games.
 
     # Efficiency
-    assert metrics[
-        "pass_offense_yards_per_attempt"
-    ] == pytest.approx(490 / 70)
+    assert metrics["pass_offense_yards_per_attempt"] == pytest.approx(490 / 70)
 
-    assert metrics[
-        "rush_offense_yards_per_attempt"
-    ] == pytest.approx(210 / 55)
+    assert metrics["rush_offense_yards_per_attempt"] == pytest.approx(210 / 55)
 
-    assert metrics[
-        "pass_defense_yards_per_attempt"
-    ] == pytest.approx(490 / 70)
+    assert metrics["pass_defense_yards_per_attempt"] == pytest.approx(490 / 70)
 
-    assert metrics[
-        "rush_defense_yards_per_attempt"
-    ] == pytest.approx(210 / 55)
+    assert metrics["rush_defense_yards_per_attempt"] == pytest.approx(210 / 55)
 
     # Volume
-    assert metrics[
-        "pass_offense_yards_per_game"
-    ] == pytest.approx(490 / 2)
+    assert metrics["pass_offense_yards_per_game"] == pytest.approx(490 / 2)
 
-    assert metrics[
-        "rush_offense_yards_per_game"
-    ] == pytest.approx(210 / 2)
+    assert metrics["rush_offense_yards_per_game"] == pytest.approx(210 / 2)
 
-    assert metrics[
-        "pass_defense_yards_per_game"
-    ] == pytest.approx(490 / 2)
+    assert metrics["pass_defense_yards_per_game"] == pytest.approx(490 / 2)
 
-    assert metrics[
-        "rush_defense_yards_per_game"
-    ] == pytest.approx(210 / 2)
+    assert metrics["rush_defense_yards_per_game"] == pytest.approx(210 / 2)
 
     # Value
-    assert metrics[
-        "pass_offense_epa_per_game"
-    ] == pytest.approx(14 / 2)
+    assert metrics["pass_offense_epa_per_game"] == pytest.approx(14 / 2)
 
-    assert metrics[
-        "rush_offense_epa_per_game"
-    ] == pytest.approx(1 / 2)
+    assert metrics["rush_offense_epa_per_game"] == pytest.approx(1 / 2)
+
+
+def test_relative_offensive_strength_above_league_average():
+    strength = NFLDerivedStatsService._relative_offensive_strength(
+        team_value=7.5,
+        league_value=6.0,
+    )
+
+    assert strength == pytest.approx(0.25)
+
+
+def test_relative_offensive_strength_below_league_average():
+    strength = NFLDerivedStatsService._relative_offensive_strength(
+        team_value=6.0,
+        league_value=7.5,
+    )
+
+    assert strength == pytest.approx(-0.20)
+
+
+def test_relative_defensive_strength_better_than_league_average():
+    strength = NFLDerivedStatsService._relative_defensive_strength(
+        team_value=6.0,
+        league_value=7.5,
+    )
+
+    assert strength == pytest.approx(0.25)
+
+
+def test_relative_defensive_strength_worse_than_league_average():
+    strength = NFLDerivedStatsService._relative_defensive_strength(
+        team_value=7.5,
+        league_value=6.0,
+    )
+
+    assert strength == pytest.approx(-0.20)
