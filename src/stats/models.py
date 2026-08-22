@@ -112,14 +112,24 @@ class NFLTeamProfile(models.Model):
     pass_offense_epa_per_game = models.FloatField(null=True, blank=True)
     rush_offense_epa_per_game = models.FloatField(null=True, blank=True)
 
-    # League relative strengths
-    pass_offense_strength = models.FloatField(null=True, blank=True)
-    rush_offense_strength = models.FloatField(null=True, blank=True)
-    pass_defense_strength = models.FloatField(null=True, blank=True)
-    rush_defense_strength = models.FloatField(null=True, blank=True)
-
     offense_type = models.CharField(max_length=20, choices=TeamType.choices, null=True, blank=True)
     defense_type = models.CharField(max_length=20, choices=TeamType.choices, null=True, blank=True)
+
+    # League-relative offense
+    pass_offense_yards_per_attempt_strength = models.FloatField(null=True, blank=True)
+    pass_offense_yards_per_game_strength = models.FloatField(null=True, blank=True)
+    pass_offense_epa_per_game_strength = models.FloatField(null=True, blank=True)
+
+    rush_offense_yards_per_attempt_strength = models.FloatField(null=True, blank=True)
+    rush_offense_yards_per_game_strength = models.FloatField(null=True, blank=True)
+    rush_offense_epa_per_game_strength = models.FloatField(null=True, blank=True)
+
+    # League-relative defense
+    pass_defense_yards_per_attempt_strength = models.FloatField(null=True, blank=True)
+    pass_defense_yards_per_game_strength = models.FloatField(null=True, blank=True)
+
+    rush_defense_yards_per_attempt_strength = models.FloatField(null=True, blank=True)
+    rush_defense_yards_per_game_strength = models.FloatField(null=True, blank=True)
 
     class Meta:
         constraints = [

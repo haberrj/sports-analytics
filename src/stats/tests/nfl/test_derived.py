@@ -1,9 +1,11 @@
+from unittest.mock import patch
+
 import pytest
 
 from games.models import Game, Season, Week
-from stats.derived import NFLDerivedStatsService
-from stats.models import NFLTeamGameStats
-from teams.models import League, Team
+from stats.models import NFLTeamGameStats, NFLTeamProfile
+from stats.nfl.derived import NFLDerivedStatsService
+from teams.models import League, Team, TeamSeason
 
 
 @pytest.mark.django_db
@@ -761,3 +763,790 @@ def test_relative_defensive_strength_worse_than_league_average():
     )
 
     assert strength == pytest.approx(-0.20)
+
+
+def test_relative_value_above_league_average():
+    strength = NFLDerivedStatsService._relative_value(
+        team_value=4.5,
+        league_value=3.0,
+    )
+
+    assert strength == pytest.approx(1.5)
+
+
+def test_relative_value_below_league_average():
+    strength = NFLDerivedStatsService._relative_value(
+        team_value=1.0,
+        league_value=2.5,
+    )
+
+    assert strength == pytest.approx(-1.5)
+
+
+def test_relative_value_returns_none_when_team_value_missing():
+    strength = NFLDerivedStatsService._relative_value(
+        team_value=None,
+        league_value=2.5,
+    )
+
+    assert strength is None
+
+
+def test_relative_value_returns_none_when_league_value_missing():
+    strength = NFLDerivedStatsService._relative_value(
+        team_value=2.5,
+        league_value=None,
+    )
+
+    assert strength is None
+
+
+@pytest.mark.django_db
+def test_get_team_relative_metrics_through_week():
+    league = League.objects.create(
+        name="National Football League",
+        abbreviation="NFL",
+    )
+
+    season = Season.objects.create(
+        league=league,
+        name="2025",
+        start_date="2025-09-01",
+        end_date="2026-02-28",
+    )
+
+    week = Week.objects.create(
+        season=season,
+        number=1,
+    )
+
+    bills = Team.objects.create(
+        external_id="BUF",
+        slug="buffalo-bills",
+        name="Bills",
+        abbreviation="BUF",
+        city="Buffalo",
+    )
+
+    dolphins = Team.objects.create(
+        external_id="MIA",
+        slug="miami-dolphins",
+        name="Dolphins",
+        abbreviation="MIA",
+        city="Miami",
+    )
+
+    game = Game.objects.create(
+        external_id="2025_01_BUF_MIA",
+        season=season,
+        week=week,
+        home_team=bills,
+        away_team=dolphins,
+        start_time="2025-09-01T18:00:00Z",
+        status=Game.Status.FINAL,
+        phase="regular_season",
+    )
+
+    NFLTeamGameStats.objects.create(
+        game=game,
+        team=bills,
+        offensive_passing_yards=300,
+        passing_attempts=40,
+        offensive_rushing_yards=120,
+        rushing_attempts=24,
+        passing_epa=8.0,
+        rushing_epa=2.0,
+        defensive_passing_yards_allowed=180,
+        opponent_passing_attempts=30,
+        defensive_rushing_yards_allowed=80,
+        opponent_rushing_attempts=20,
+    )
+
+    NFLTeamGameStats.objects.create(
+        game=game,
+        team=dolphins,
+        offensive_passing_yards=200,
+        passing_attempts=40,
+        offensive_rushing_yards=80,
+        rushing_attempts=20,
+        passing_epa=2.0,
+        rushing_epa=-2.0,
+        defensive_passing_yards_allowed=300,
+        opponent_passing_attempts=40,
+        defensive_rushing_yards_allowed=120,
+        opponent_rushing_attempts=24,
+    )
+
+    relative = NFLDerivedStatsService.get_team_relative_metrics_through_week(
+        team=bills,
+        week=week,
+    )
+
+    # League passing offense:
+    # 500 / 80 = 6.25 Y/A
+    #
+    # Bills passing offense:
+    # 300 / 40 = 7.5 Y/A
+    #
+    # 7.5 / 6.25 - 1 = 0.20
+    assert relative["pass_offense_yards_per_attempt_strength"] == pytest.approx(0.20)
+
+    # League rushing offense:
+    # 200 / 44
+    #
+    # Bills rushing offense:
+    # 120 / 24 = 5.0
+    assert relative["rush_offense_yards_per_attempt_strength"] == pytest.approx((5.0 / (200 / 44)) - 1)
+
+    # League passing volume:
+    # 500 / 2 team-games = 250
+    #
+    # Bills passing volume:
+    # 300 / 1 = 300
+    assert relative["pass_offense_yards_per_game_strength"] == pytest.approx(0.20)
+
+    # League rushing volume:
+    # 200 / 2 = 100
+    #
+    # Bills:
+    # 120
+    assert relative["rush_offense_yards_per_game_strength"] == pytest.approx(0.20)
+
+    # League passing EPA:
+    # (8 + 2) / 2 = 5
+    #
+    # Bills:
+    # 8
+    #
+    # Relative value = 8 - 5 = 3
+    assert relative["pass_offense_epa_per_game_strength"] == pytest.approx(3.0)
+
+    # League rushing EPA:
+    # (2 + -2) / 2 = 0
+    #
+    # Bills:
+    # 2
+    assert relative["rush_offense_epa_per_game_strength"] == pytest.approx(2.0)
+
+    # League passing defense:
+    # 480 yards allowed / 70 opponent attempts
+    #
+    # Bills:
+    # 180 / 30 = 6.0
+    #
+    # Defense is inverted:
+    # league / team - 1
+    assert relative["pass_defense_yards_per_attempt_strength"] == pytest.approx(((480 / 70) / 6.0) - 1)
+
+    # League rushing defense:
+    # 200 yards allowed / 44 opponent attempts
+    #
+    # Bills:
+    # 80 / 20 = 4.0
+    assert relative["rush_defense_yards_per_attempt_strength"] == pytest.approx(((200 / 44) / 4.0) - 1)
+
+    # League passing yards allowed/game:
+    # 480 / 2 = 240
+    #
+    # Bills:
+    # 180
+    assert relative["pass_defense_yards_per_game_strength"] == pytest.approx((240 / 180) - 1)
+
+    # League rushing yards allowed/game:
+    # 200 / 2 = 100
+    #
+    # Bills:
+    # 80
+    assert relative["rush_defense_yards_per_game_strength"] == pytest.approx((100 / 80) - 1)
+
+
+@pytest.mark.django_db
+def test_get_team_relative_metrics_handles_missing_data():
+    league = League.objects.create(
+        name="National Football League",
+        abbreviation="NFL",
+    )
+
+    season = Season.objects.create(
+        league=league,
+        name="2025",
+        start_date="2025-09-01",
+        end_date="2026-02-28",
+    )
+
+    week = Week.objects.create(
+        season=season,
+        number=1,
+    )
+
+    bills = Team.objects.create(
+        external_id="BUF",
+        slug="buffalo-bills",
+        name="Bills",
+        abbreviation="BUF",
+        city="Buffalo",
+    )
+
+    dolphins = Team.objects.create(
+        external_id="MIA",
+        slug="miami-dolphins",
+        name="Dolphins",
+        abbreviation="MIA",
+        city="Miami",
+    )
+
+    game = Game.objects.create(
+        external_id="2025_01_BUF_MIA",
+        season=season,
+        week=week,
+        home_team=bills,
+        away_team=dolphins,
+        start_time="2025-09-01T18:00:00Z",
+        status=Game.Status.FINAL,
+        phase="regular_season",
+    )
+
+    NFLTeamGameStats.objects.create(
+        game=game,
+        team=bills,
+        offensive_passing_yards=250,
+        passing_attempts=None,
+        offensive_rushing_yards=100,
+        rushing_attempts=20,
+        passing_epa=None,
+        rushing_epa=1.0,
+        defensive_passing_yards_allowed=200,
+        opponent_passing_attempts=None,
+        defensive_rushing_yards_allowed=80,
+        opponent_rushing_attempts=20,
+    )
+
+    NFLTeamGameStats.objects.create(
+        game=game,
+        team=dolphins,
+        offensive_passing_yards=200,
+        passing_attempts=30,
+        offensive_rushing_yards=80,
+        rushing_attempts=20,
+        passing_epa=4.0,
+        rushing_epa=1.0,
+        defensive_passing_yards_allowed=250,
+        opponent_passing_attempts=None,
+        defensive_rushing_yards_allowed=100,
+        opponent_rushing_attempts=20,
+    )
+
+    relative = NFLDerivedStatsService.get_team_relative_metrics_through_week(
+        team=bills,
+        week=week,
+    )
+
+    assert relative["pass_offense_yards_per_attempt_strength"] is None
+
+    assert relative["pass_defense_yards_per_attempt_strength"] is None
+
+    assert relative["pass_offense_epa_per_game_strength"] is None
+
+    # Independent metrics should still calculate.
+    assert relative["rush_offense_yards_per_attempt_strength"] is not None
+
+    assert relative["rush_defense_yards_per_attempt_strength"] is not None
+
+
+@pytest.mark.django_db
+@patch.object(
+    NFLDerivedStatsService,
+    "get_team_relative_metrics_through_week",
+)
+@patch.object(
+    NFLDerivedStatsService,
+    "get_team_metrics_through_week",
+)
+def test_update_team_profile_through_week(
+    mock_get_metrics,
+    mock_get_relative_metrics,
+):
+    league = League.objects.create(
+        name="National Football League",
+        abbreviation="NFL",
+    )
+
+    season = Season.objects.create(
+        league=league,
+        name="2025",
+        start_date="2025-09-01",
+        end_date="2026-02-28",
+    )
+
+    week = Week.objects.create(
+        season=season,
+        number=5,
+    )
+
+    team = Team.objects.create(
+        external_id="BUF",
+        slug="buffalo-bills",
+        name="Bills",
+        abbreviation="BUF",
+        city="Buffalo",
+    )
+
+    TeamSeason.objects.create(
+        team=team,
+        season=season,
+        name="Bills",
+        abbreviation="BUF",
+        city="Buffalo",
+    )
+
+    mock_get_metrics.return_value = {
+        "pass_offense_yards_per_attempt": 7.5,
+        "rush_offense_yards_per_attempt": 4.8,
+        "pass_defense_yards_per_attempt": 6.1,
+        "rush_defense_yards_per_attempt": 3.9,
+        "pass_offense_yards_per_game": 270.0,
+        "rush_offense_yards_per_game": 125.0,
+        "pass_defense_yards_per_game": 215.0,
+        "rush_defense_yards_per_game": 92.0,
+        "pass_offense_epa_per_game": 6.4,
+        "rush_offense_epa_per_game": 1.8,
+    }
+
+    mock_get_relative_metrics.return_value = {
+        "pass_offense_yards_per_attempt_strength": 0.12,
+        "pass_offense_yards_per_game_strength": 0.09,
+        "pass_offense_epa_per_game_strength": 1.4,
+        "rush_offense_yards_per_attempt_strength": 0.05,
+        "rush_offense_yards_per_game_strength": 0.02,
+        "rush_offense_epa_per_game_strength": 0.4,
+        "pass_defense_yards_per_attempt_strength": 0.08,
+        "pass_defense_yards_per_game_strength": 0.06,
+        "rush_defense_yards_per_attempt_strength": 0.17,
+        "rush_defense_yards_per_game_strength": 0.11,
+    }
+
+    profile = NFLDerivedStatsService.update_team_profile_through_week(
+        team=team,
+        week=week,
+    )
+
+    assert NFLTeamProfile.objects.count() == 1
+
+    assert profile.team == team
+    assert profile.season == season
+    assert profile.through_week == week
+
+    assert profile.pass_offense_yards_per_attempt == 7.5
+    assert profile.rush_offense_yards_per_attempt == 4.8
+    assert profile.pass_defense_yards_per_attempt == 6.1
+    assert profile.rush_defense_yards_per_attempt == 3.9
+
+    assert profile.pass_offense_yards_per_game == 270.0
+    assert profile.rush_offense_yards_per_game == 125.0
+    assert profile.pass_defense_yards_per_game == 215.0
+    assert profile.rush_defense_yards_per_game == 92.0
+
+    assert profile.pass_offense_epa_per_game == 6.4
+    assert profile.rush_offense_epa_per_game == 1.8
+
+    assert profile.pass_offense_yards_per_attempt_strength == 0.12
+    assert profile.pass_offense_yards_per_game_strength == 0.09
+    assert profile.pass_offense_epa_per_game_strength == 1.4
+
+    assert profile.rush_offense_yards_per_attempt_strength == 0.05
+    assert profile.rush_offense_yards_per_game_strength == 0.02
+    assert profile.rush_offense_epa_per_game_strength == 0.4
+
+    assert profile.pass_defense_yards_per_attempt_strength == 0.08
+    assert profile.pass_defense_yards_per_game_strength == 0.06
+
+    assert profile.rush_defense_yards_per_attempt_strength == 0.17
+    assert profile.rush_defense_yards_per_game_strength == 0.11
+
+
+@pytest.mark.django_db
+@patch.object(
+    NFLDerivedStatsService,
+    "get_team_relative_metrics_through_week",
+)
+@patch.object(
+    NFLDerivedStatsService,
+    "get_team_metrics_through_week",
+)
+def test_update_team_profile_through_week_is_idempotent(
+    mock_get_metrics,
+    mock_get_relative_metrics,
+):
+    league = League.objects.create(
+        name="National Football League",
+        abbreviation="NFL",
+    )
+
+    season = Season.objects.create(
+        league=league,
+        name="2025",
+        start_date="2025-09-01",
+        end_date="2026-02-28",
+    )
+
+    week = Week.objects.create(
+        season=season,
+        number=5,
+    )
+
+    team = Team.objects.create(
+        external_id="BUF",
+        slug="buffalo-bills",
+        name="Bills",
+        abbreviation="BUF",
+        city="Buffalo",
+    )
+
+    TeamSeason.objects.create(
+        team=team,
+        season=season,
+        name="Bills",
+        abbreviation="BUF",
+        city="Buffalo",
+    )
+
+    mock_get_metrics.return_value = {
+        "pass_offense_yards_per_attempt": 7.5,
+        "rush_offense_yards_per_attempt": 4.8,
+        "pass_defense_yards_per_attempt": 6.1,
+        "rush_defense_yards_per_attempt": 3.9,
+        "pass_offense_yards_per_game": 270.0,
+        "rush_offense_yards_per_game": 125.0,
+        "pass_defense_yards_per_game": 215.0,
+        "rush_defense_yards_per_game": 92.0,
+        "pass_offense_epa_per_game": 6.4,
+        "rush_offense_epa_per_game": 1.8,
+    }
+
+    mock_get_relative_metrics.return_value = {
+        "pass_offense_yards_per_attempt_strength": 0.12,
+        "pass_offense_yards_per_game_strength": 0.09,
+        "pass_offense_epa_per_game_strength": 1.4,
+        "rush_offense_yards_per_attempt_strength": 0.05,
+        "rush_offense_yards_per_game_strength": 0.02,
+        "rush_offense_epa_per_game_strength": 0.4,
+        "pass_defense_yards_per_attempt_strength": 0.08,
+        "pass_defense_yards_per_game_strength": 0.06,
+        "rush_defense_yards_per_attempt_strength": 0.17,
+        "rush_defense_yards_per_game_strength": 0.11,
+    }
+
+    NFLDerivedStatsService.update_team_profile_through_week(
+        team=team,
+        week=week,
+    )
+
+    mock_get_metrics.return_value["pass_offense_yards_per_attempt"] = 8.0
+
+    NFLDerivedStatsService.update_team_profile_through_week(
+        team=team,
+        week=week,
+    )
+
+    assert NFLTeamProfile.objects.count() == 1
+
+    profile = NFLTeamProfile.objects.get(
+        team=team,
+        season=season,
+        through_week=week,
+    )
+
+    assert profile.pass_offense_yards_per_attempt == 8.0
+
+
+@pytest.mark.django_db
+def test_update_profiles_through_week_creates_profiles_for_teams_with_stats():
+    league = League.objects.create(
+        name="National Football League",
+        abbreviation="NFL",
+    )
+
+    season = Season.objects.create(
+        league=league,
+        name="2025",
+        start_date="2025-09-01",
+        end_date="2026-02-28",
+    )
+
+    week = Week.objects.create(
+        season=season,
+        number=1,
+    )
+
+    bills = Team.objects.create(
+        external_id="BUF",
+        slug="buffalo-bills",
+        name="Bills",
+        abbreviation="BUF",
+        city="Buffalo",
+    )
+
+    dolphins = Team.objects.create(
+        external_id="MIA",
+        slug="miami-dolphins",
+        name="Dolphins",
+        abbreviation="MIA",
+        city="Miami",
+    )
+
+    jets = Team.objects.create(
+        external_id="NYJ",
+        slug="new-york-jets",
+        name="Jets",
+        abbreviation="NYJ",
+        city="New York",
+    )
+
+    for team in [bills, dolphins, jets]:
+        TeamSeason.objects.create(
+            team=team,
+            season=season,
+            name=team.name,
+            abbreviation=team.abbreviation,
+            city=team.city,
+        )
+
+    game = Game.objects.create(
+        external_id="2025_01_BUF_MIA",
+        season=season,
+        week=week,
+        home_team=bills,
+        away_team=dolphins,
+        start_time="2025-09-01T18:00:00Z",
+        status=Game.Status.FINAL,
+        phase="regular_season",
+    )
+
+    NFLTeamGameStats.objects.create(
+        game=game,
+        team=bills,
+        offensive_passing_yards=300,
+        passing_attempts=40,
+        offensive_rushing_yards=120,
+        rushing_attempts=24,
+        passing_epa=8.0,
+        rushing_epa=2.0,
+        defensive_passing_yards_allowed=200,
+        opponent_passing_attempts=40,
+        defensive_rushing_yards_allowed=80,
+        opponent_rushing_attempts=20,
+    )
+
+    NFLTeamGameStats.objects.create(
+        game=game,
+        team=dolphins,
+        offensive_passing_yards=200,
+        passing_attempts=40,
+        offensive_rushing_yards=80,
+        rushing_attempts=20,
+        passing_epa=2.0,
+        rushing_epa=-2.0,
+        defensive_passing_yards_allowed=300,
+        opponent_passing_attempts=40,
+        defensive_rushing_yards_allowed=120,
+        opponent_rushing_attempts=24,
+    )
+
+    profiles = NFLDerivedStatsService.update_profiles_through_week(
+        week=week,
+    )
+
+    assert len(profiles) == 2
+    assert NFLTeamProfile.objects.count() == 2
+
+    assert {profile.team for profile in profiles} == {
+        bills,
+        dolphins,
+    }
+
+    assert NFLTeamProfile.objects.filter(
+        team=bills,
+        season=season,
+        through_week=week,
+    ).exists()
+
+    assert NFLTeamProfile.objects.filter(
+        team=dolphins,
+        season=season,
+        through_week=week,
+    ).exists()
+
+    assert not NFLTeamProfile.objects.filter(
+        team=jets,
+        season=season,
+        through_week=week,
+    ).exists()
+
+
+@pytest.mark.django_db
+def test_update_profiles_through_week_excludes_teams_with_only_future_stats():
+    league = League.objects.create(
+        name="National Football League",
+        abbreviation="NFL",
+    )
+
+    season = Season.objects.create(
+        league=league,
+        name="2025",
+        start_date="2025-09-01",
+        end_date="2026-02-28",
+    )
+
+    week_1 = Week.objects.create(
+        season=season,
+        number=1,
+    )
+
+    week_2 = Week.objects.create(
+        season=season,
+        number=2,
+    )
+
+    bills = Team.objects.create(
+        external_id="BUF",
+        slug="buffalo-bills",
+        name="Bills",
+        abbreviation="BUF",
+        city="Buffalo",
+    )
+
+    dolphins = Team.objects.create(
+        external_id="MIA",
+        slug="miami-dolphins",
+        name="Dolphins",
+        abbreviation="MIA",
+        city="Miami",
+    )
+
+    jets = Team.objects.create(
+        external_id="NYJ",
+        slug="new-york-jets",
+        name="Jets",
+        abbreviation="NYJ",
+        city="New York",
+    )
+
+    patriots = Team.objects.create(
+        external_id="NE",
+        slug="new-england-patriots",
+        name="Patriots",
+        abbreviation="NE",
+        city="New England",
+    )
+
+    for team in [bills, dolphins, jets, patriots]:
+        TeamSeason.objects.create(
+            team=team,
+            season=season,
+            name=team.name,
+            abbreviation=team.abbreviation,
+            city=team.city,
+        )
+
+    week_1_game = Game.objects.create(
+        external_id="2025_01_BUF_MIA",
+        season=season,
+        week=week_1,
+        home_team=bills,
+        away_team=dolphins,
+        start_time="2025-09-01T18:00:00Z",
+        status=Game.Status.FINAL,
+        phase="regular_season",
+    )
+
+    week_2_game = Game.objects.create(
+        external_id="2025_02_NYJ_NE",
+        season=season,
+        week=week_2,
+        home_team=jets,
+        away_team=patriots,
+        start_time="2025-09-08T18:00:00Z",
+        status=Game.Status.FINAL,
+        phase="regular_season",
+    )
+
+    NFLTeamGameStats.objects.create(
+        game=week_1_game,
+        team=bills,
+        offensive_passing_yards=300,
+        passing_attempts=40,
+        offensive_rushing_yards=120,
+        rushing_attempts=24,
+        passing_epa=8.0,
+        rushing_epa=2.0,
+        defensive_passing_yards_allowed=200,
+        opponent_passing_attempts=40,
+        defensive_rushing_yards_allowed=80,
+        opponent_rushing_attempts=20,
+    )
+
+    NFLTeamGameStats.objects.create(
+        game=week_1_game,
+        team=dolphins,
+        offensive_passing_yards=200,
+        passing_attempts=40,
+        offensive_rushing_yards=80,
+        rushing_attempts=20,
+        passing_epa=2.0,
+        rushing_epa=-2.0,
+        defensive_passing_yards_allowed=300,
+        opponent_passing_attempts=40,
+        defensive_rushing_yards_allowed=120,
+        opponent_rushing_attempts=24,
+    )
+
+    NFLTeamGameStats.objects.create(
+        game=week_2_game,
+        team=jets,
+        offensive_passing_yards=250,
+        passing_attempts=35,
+        offensive_rushing_yards=110,
+        rushing_attempts=25,
+        passing_epa=4.0,
+        rushing_epa=1.0,
+        defensive_passing_yards_allowed=220,
+        opponent_passing_attempts=32,
+        defensive_rushing_yards_allowed=95,
+        opponent_rushing_attempts=22,
+    )
+
+    NFLTeamGameStats.objects.create(
+        game=week_2_game,
+        team=patriots,
+        offensive_passing_yards=220,
+        passing_attempts=32,
+        offensive_rushing_yards=95,
+        rushing_attempts=22,
+        passing_epa=3.0,
+        rushing_epa=0.5,
+        defensive_passing_yards_allowed=250,
+        opponent_passing_attempts=35,
+        defensive_rushing_yards_allowed=110,
+        opponent_rushing_attempts=25,
+    )
+
+    profiles = NFLDerivedStatsService.update_profiles_through_week(
+        week=week_1,
+    )
+
+    assert len(profiles) == 2
+
+    assert {profile.team for profile in profiles} == {
+        bills,
+        dolphins,
+    }
+
+    assert not NFLTeamProfile.objects.filter(
+        team=jets,
+        through_week=week_1,
+    ).exists()
+
+    assert not NFLTeamProfile.objects.filter(
+        team=patriots,
+        through_week=week_1,
+    ).exists()

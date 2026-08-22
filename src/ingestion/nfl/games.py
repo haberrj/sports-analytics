@@ -41,7 +41,7 @@ class NFLGameIngestor(NFLIngestor):
             name=str(self.season),
         )
 
-        if not self.should_ingest(season):
+        if season is not None and not self.should_ingest(season) and not self.force:
             return IngestionResult.ALREADY_COMPLETE
 
         self.schedule = nfl.load_schedules([self.season])

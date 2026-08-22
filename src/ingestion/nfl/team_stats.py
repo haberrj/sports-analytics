@@ -23,7 +23,7 @@ class NFLTeamStatsIngestor(NFLIngestor):
             name=str(self.season),
         )
 
-        if not self.should_ingest(season):
+        if not self.should_ingest(season) and not self.force:
             return IngestionResult.ALREADY_COMPLETE
         try:
             self.stats = nfl.load_team_stats(self.season)

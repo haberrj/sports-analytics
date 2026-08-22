@@ -33,7 +33,7 @@ class NFLTeamIngestor(NFLIngestor):
         league = self._get_or_create_league()
         season = self._get_or_create_season(league)
 
-        if not self.should_ingest(season):
+        if not self.should_ingest(season) and not self.force:
             return IngestionResult.ALREADY_COMPLETE
 
         self.teams = nfl.load_teams()

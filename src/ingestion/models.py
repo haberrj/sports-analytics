@@ -9,6 +9,7 @@ class IngestionState(models.Model):
         TEAMS = "teams", "Teams"
         GAMES = "games", "Games"
         TEAM_STATS = "team_stats", "Team Stats"
+        TEAM_PROFILES = "team_profiles", "Team Profiles"
 
     league = models.ForeignKey(
         League,
