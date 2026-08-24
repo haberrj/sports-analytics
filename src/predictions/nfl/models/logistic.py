@@ -13,10 +13,21 @@ from predictions.nfl.models.base import PredictionModel
 class NFLLogisticRegressionModel(PredictionModel):
     """Logistic regression model for NFL game outcomes.
 
-    Initial Results:
-        - Log Loss: 0.68375 (3.16% better than baseline)
-        - Brier: 0.24406 (0.00095 better than baseline)
-        - ROC AUC: 0.6003 (0.1003 better than baseline)
+    Initial validation results (2023-2024):
+    - Accuracy: 0.5965
+    - Home-team baseline accuracy: 0.5649
+    - Log loss: 0.68375
+    - Baseline log loss: 0.68470
+    - Brier score: 0.24406
+    - Baseline Brier score: 0.24579
+    - ROC AUC: 0.6003
+
+    Initial test results (2024-2025):
+    - Accuracy: 0.6509
+    - Home-team baseline accuracy: 0.5404
+    - Log loss: 0.63687
+    - Brier score: 0.22262
+    - ROC AUC: 0.6928
     """
 
     def __init__(self, max_iterations: int = 1000):
