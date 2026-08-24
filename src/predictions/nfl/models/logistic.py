@@ -3,6 +3,7 @@ from typing import Any
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, brier_score_loss, log_loss, roc_auc_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
@@ -10,7 +11,13 @@ from predictions.nfl.models.base import PredictionModel
 
 
 class NFLLogisticRegressionModel(PredictionModel):
-    """Logistic regression model for NFL game outcomes."""
+    """Logistic regression model for NFL game outcomes.
+
+    Initial Results:
+        - Log Loss: 0.68375 (3.16% better than baseline)
+        - Brier: 0.24406 (0.00095 better than baseline)
+        - ROC AUC: 0.6003 (0.1003 better than baseline)
+    """
 
     def __init__(self, max_iterations: int = 1000):
         self.vectorizer: DictVectorizer = DictVectorizer(sparse=False)
@@ -35,3 +42,26 @@ class NFLLogisticRegressionModel(PredictionModel):
         probabilities = self.model.predict_proba(transformed_features)
 
         return probabilities[:, 1].tolist()
+
+    def accuracy(self, features: list[dict], targets: list[Any]) -> float:
+        predictions = self.predict(features)
+        return accuracy_score(targets, predictions)
+
+    def log_loss(self, features: list[dict], targets: list[Any]) -> float:
+        predictions_proba = self.predict_proba(features)
+        return log_loss(targets, predictions_proba)
+
+    def brier_score(self, features: list[dict], targets: list[Any]) -> float:
+        predictions_proba = self.predict_proba(features)
+        return brier_score_loss(targets, predictions_proba)
+
+    def roc_auc(self, features: list[dict], targets: list[Any]) -> float:
+        predictions_proba = self.predict_proba(features)
+        return roc_auc_score(targets, predictions_proba)
+
+    @staticmethod
+    def baseline_accuracy(targets: list[Any]) -> float:
+        return max(
+            sum(targets) / len(targets),
+            1 - (sum(targets) / len(targets)),
+        )
