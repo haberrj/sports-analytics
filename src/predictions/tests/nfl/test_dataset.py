@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import pytest
 
 from games.models import Game, Season, Week
@@ -293,3 +295,330 @@ def test_get_profile_before_game_returns_none_without_history():
     )
 
     assert profile is None
+
+
+@pytest.mark.django_db
+def test_build_training_row():
+    league = League.objects.create(
+        name="National Football League",
+        abbreviation="NFL",
+    )
+
+    season = Season.objects.create(
+        league=league,
+        name="2025",
+        start_date="2025-09-01",
+        end_date="2026-02-28",
+    )
+
+    week_4 = Week.objects.create(
+        season=season,
+        number=4,
+    )
+
+    week_5 = Week.objects.create(
+        season=season,
+        number=5,
+    )
+
+    bills = Team.objects.create(
+        external_id="BUF",
+        slug="buffalo-bills",
+        city="Buffalo",
+        name="Bills",
+        abbreviation="BUF",
+    )
+
+    chiefs = Team.objects.create(
+        external_id="KC",
+        slug="kansas-city-chiefs",
+        city="Kansas City",
+        name="Chiefs",
+        abbreviation="KC",
+    )
+
+    for team in [bills, chiefs]:
+        TeamSeason.objects.create(
+            team=team,
+            season=season,
+            city=team.city,
+            name=team.name,
+            abbreviation=team.abbreviation,
+        )
+
+    NFLTeamProfile.objects.create(
+        team=bills,
+        season=season,
+        through_week=week_4,
+        points_for_per_game=30.0,
+        points_allowed_per_game=20.0,
+        point_differential_per_game=10.0,
+        pass_offense_yards_per_attempt=8.0,
+        rush_offense_yards_per_attempt=5.0,
+        pass_epa_per_attempt=0.25,
+        defensive_sacks_per_game=3.0,
+        turnover_differential_per_game=1.0,
+        field_goal_percentage=0.9,
+        pass_offense_yards_per_attempt_strength=0.15,
+    )
+
+    NFLTeamProfile.objects.create(
+        team=chiefs,
+        season=season,
+        through_week=week_4,
+        points_for_per_game=27.0,
+        points_allowed_per_game=23.0,
+        point_differential_per_game=4.0,
+        pass_offense_yards_per_attempt=7.0,
+        rush_offense_yards_per_attempt=4.5,
+        pass_epa_per_attempt=0.18,
+        defensive_sacks_per_game=2.0,
+        turnover_differential_per_game=-0.5,
+        field_goal_percentage=0.8,
+        pass_offense_yards_per_attempt_strength=0.05,
+    )
+
+    game = Game.objects.create(
+        external_id="2025_05_BUF_KC",
+        season=season,
+        week=week_5,
+        home_team=bills,
+        away_team=chiefs,
+        home_score=31,
+        away_score=24,
+        neutral_site=False,
+        start_time="2025-10-05T18:00:00Z",
+        status=Game.Status.FINAL,
+        phase="regular_season",
+    )
+
+    row = NFLTrainingDataService.build_training_row(game)
+
+    assert row is not None
+
+    # Metadata
+    assert row["game_id"] == "2025_05_BUF_KC"
+    assert row["season"] == 2025
+    assert row["week"] == 5
+    assert row["home_team"] == "BUF"
+    assert row["away_team"] == "KC"
+    assert row["neutral_site"] is False
+
+    # Representative home features
+    assert row["home_points_for_per_game"] == 30.0
+    assert row["home_point_differential_per_game"] == 10.0
+    assert row["home_pass_offense_yards_per_attempt"] == 8.0
+    assert row["home_pass_epa_per_attempt"] == 0.25
+    assert row["home_defensive_sacks_per_game"] == 3.0
+    assert row["home_turnover_differential_per_game"] == 1.0
+    assert row["home_field_goal_percentage"] == 0.9
+    assert row["home_pass_offense_yards_per_attempt_strength"] == 0.15
+
+    # Representative away features
+    assert row["away_points_for_per_game"] == 27.0
+    assert row["away_point_differential_per_game"] == 4.0
+    assert row["away_pass_offense_yards_per_attempt"] == 7.0
+    assert row["away_pass_epa_per_attempt"] == 0.18
+    assert row["away_defensive_sacks_per_game"] == 2.0
+    assert row["away_turnover_differential_per_game"] == -0.5
+    assert row["away_field_goal_percentage"] == 0.8
+    assert row["away_pass_offense_yards_per_attempt_strength"] == 0.05
+
+    # Targets
+    assert row["home_score"] == 31
+    assert row["away_score"] == 24
+    assert row["home_win"] == 1
+    assert row["total_game_points"] == 55
+    assert row["score_differential"] == 7
+
+
+@pytest.mark.django_db
+def test_build_training_row_returns_none_when_profile_missing():
+    league = League.objects.create(
+        name="National Football League",
+        abbreviation="NFL",
+    )
+
+    season = Season.objects.create(
+        league=league,
+        name="2025",
+        start_date="2025-09-01",
+        end_date="2026-02-28",
+    )
+
+    week = Week.objects.create(
+        season=season,
+        number=1,
+    )
+
+    bills = Team.objects.create(
+        external_id="BUF",
+        slug="buffalo-bills",
+        city="Buffalo",
+        name="Bills",
+        abbreviation="BUF",
+    )
+
+    chiefs = Team.objects.create(
+        external_id="KC",
+        slug="kansas-city-chiefs",
+        city="Kansas City",
+        name="Chiefs",
+        abbreviation="KC",
+    )
+
+    game = Game.objects.create(
+        external_id="2025_01_BUF_KC",
+        season=season,
+        week=week,
+        home_team=bills,
+        away_team=chiefs,
+        home_score=31,
+        away_score=24,
+        start_time="2025-09-04T18:00:00Z",
+        status=Game.Status.FINAL,
+        phase="regular_season",
+    )
+
+    row = NFLTrainingDataService.build_training_row(game)
+
+    assert row is None
+
+
+@pytest.mark.django_db
+def test_build_training_row_returns_none_when_game_has_no_score():
+    league = League.objects.create(
+        name="National Football League",
+        abbreviation="NFL",
+    )
+
+    season = Season.objects.create(
+        league=league,
+        name="2025",
+        start_date="2025-09-01",
+        end_date="2026-02-28",
+    )
+
+    week_4 = Week.objects.create(
+        season=season,
+        number=4,
+    )
+
+    week_5 = Week.objects.create(
+        season=season,
+        number=5,
+    )
+
+    bills = Team.objects.create(
+        external_id="BUF",
+        slug="buffalo-bills",
+        city="Buffalo",
+        name="Bills",
+        abbreviation="BUF",
+    )
+
+    chiefs = Team.objects.create(
+        external_id="KC",
+        slug="kansas-city-chiefs",
+        city="Kansas City",
+        name="Chiefs",
+        abbreviation="KC",
+    )
+
+    for team in [bills, chiefs]:
+        TeamSeason.objects.create(
+            team=team,
+            season=season,
+            city=team.city,
+            name=team.name,
+            abbreviation=team.abbreviation,
+        )
+
+        NFLTeamProfile.objects.create(
+            team=team,
+            season=season,
+            through_week=week_4,
+        )
+
+    game = Game.objects.create(
+        external_id="2025_05_BUF_KC",
+        season=season,
+        week=week_5,
+        home_team=bills,
+        away_team=chiefs,
+        home_score=None,
+        away_score=None,
+        start_time="2025-10-05T18:00:00Z",
+        status=Game.Status.SCHEDULED,
+        phase="regular_season",
+    )
+
+    row = NFLTrainingDataService.build_training_row(game)
+
+    assert row is None
+
+
+@pytest.mark.django_db
+@patch.object(NFLTrainingDataService, "get_profile_before_game")
+def test_build_training_row_handles_tie(mock_get_profile):
+    league = League.objects.create(
+        name="National Football League",
+        abbreviation="NFL",
+    )
+
+    season = Season.objects.create(
+        league=league,
+        name="2025",
+        start_date="2025-09-01",
+        end_date="2026-02-28",
+    )
+
+    week = Week.objects.create(
+        season=season,
+        number=5,
+    )
+
+    bills = Team.objects.create(
+        external_id="BUF",
+        slug="buffalo-bills",
+        city="Buffalo",
+        name="Bills",
+        abbreviation="BUF",
+    )
+
+    chiefs = Team.objects.create(
+        external_id="KC",
+        slug="kansas-city-chiefs",
+        city="Kansas City",
+        name="Chiefs",
+        abbreviation="KC",
+    )
+
+    profile = NFLTeamProfile(
+        team=bills,
+        season=season,
+        through_week=week,
+    )
+
+    mock_get_profile.return_value = profile
+
+    game = Game.objects.create(
+        external_id="2025_05_BUF_KC",
+        season=season,
+        week=week,
+        home_team=bills,
+        away_team=chiefs,
+        home_score=24,
+        away_score=24,
+        neutral_site=False,
+        start_time="2025-10-05T18:00:00Z",
+        status=Game.Status.FINAL,
+        phase="regular_season",
+    )
+
+    row = NFLTrainingDataService.build_training_row(game)
+
+    assert row is not None
+    assert row["home_win"] == 0
+    assert row["total_game_points"] == 48
+    assert row["score_differential"] == 0

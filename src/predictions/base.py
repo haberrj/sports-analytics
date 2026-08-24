@@ -16,5 +16,5 @@ class TrainingDataService[ProfileT: models.Model, GameT: models.Model, TeamT: mo
 
     @staticmethod
     @abstractmethod
-    def build_training_row(game: GameT) -> dict:
+    def build_training_row(game: GameT) -> dict | None:
         pass
