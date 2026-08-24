@@ -256,6 +256,18 @@ def test_get_team_aggregate_through_week():
         offensive_turnovers=1,
         defensive_turnovers_forced=2,
         passing_cpoe=4.0,
+        passing_air_yards=210,
+        passing_yards_after_catch=110,
+        first_downs=22,
+        third_down_attempts=12,
+        third_down_conversions=6,
+        fourth_down_attempts=2,
+        fourth_down_conversions=1,
+        penalties=5,
+        penalty_yards=45,
+        defensive_tackles_for_loss=7,
+        field_goals_made=2,
+        field_goals_attempted=3,
     )
 
     NFLTeamGameStats.objects.create(
@@ -280,6 +292,18 @@ def test_get_team_aggregate_through_week():
         offensive_turnovers=2,
         defensive_turnovers_forced=1,
         passing_cpoe=6.0,
+        passing_air_yards=280,
+        passing_yards_after_catch=150,
+        first_downs=25,
+        third_down_attempts=14,
+        third_down_conversions=7,
+        fourth_down_attempts=3,
+        fourth_down_conversions=2,
+        penalties=7,
+        penalty_yards=60,
+        defensive_tackles_for_loss=5,
+        field_goals_made=1,
+        field_goals_attempted=2,
     )
 
     aggregate = NFLDerivedStatsService.get_team_aggregate_through_week(
@@ -316,6 +340,18 @@ def test_get_team_aggregate_through_week():
     assert aggregate["defensive_turnovers_forced"] == 3
 
     assert aggregate["average_cpoe"] == 5.0
+    assert aggregate["passing_air_yards"] == 490
+    assert aggregate["passing_yards_after_catch"] == 260
+    assert aggregate["first_downs"] == 47
+    assert aggregate["third_down_attempts"] == 26
+    assert aggregate["third_down_conversions"] == 13
+    assert aggregate["fourth_down_attempts"] == 5
+    assert aggregate["fourth_down_conversions"] == 3
+    assert aggregate["penalties"] == 12
+    assert aggregate["penalty_yards"] == 105
+    assert aggregate["defensive_tackles_for_loss"] == 12
+    assert aggregate["field_goals_made"] == 3
+    assert aggregate["field_goals_attempted"] == 5
 
 
 def test_safe_divide_returns_result():
@@ -409,6 +445,27 @@ def test_get_team_metrics_through_week():
         opponent_passing_attempts=30,
         defensive_rushing_yards_allowed=80,
         opponent_rushing_attempts=20,
+        points_for=27,
+        points_allowed=20,
+        passing_completions=20,
+        passing_cpoe=4.0,
+        passing_air_yards=210,
+        passing_yards_after_catch=110,
+        sacks_allowed=2,
+        first_downs=22,
+        third_down_attempts=12,
+        third_down_conversions=6,
+        fourth_down_attempts=2,
+        fourth_down_conversions=1,
+        penalties=5,
+        penalty_yards=45,
+        offensive_turnovers=1,
+        defensive_turnovers_forced=2,
+        defensive_sacks=3,
+        defensive_qb_hits=6,
+        defensive_tackles_for_loss=7,
+        field_goals_made=2,
+        field_goals_attempted=3,
     )
 
     NFLTeamGameStats.objects.create(
@@ -424,6 +481,27 @@ def test_get_team_metrics_through_week():
         opponent_passing_attempts=30,
         defensive_rushing_yards_allowed=90,
         opponent_rushing_attempts=20,
+        points_for=31,
+        points_allowed=24,
+        passing_completions=30,
+        passing_cpoe=6.0,
+        passing_air_yards=280,
+        passing_yards_after_catch=150,
+        sacks_allowed=1,
+        first_downs=25,
+        third_down_attempts=14,
+        third_down_conversions=7,
+        fourth_down_attempts=3,
+        fourth_down_conversions=2,
+        penalties=7,
+        penalty_yards=60,
+        offensive_turnovers=2,
+        defensive_turnovers_forced=1,
+        defensive_sacks=4,
+        defensive_qb_hits=8,
+        defensive_tackles_for_loss=5,
+        field_goals_made=1,
+        field_goals_attempted=2,
     )
 
     metrics = NFLDerivedStatsService.get_team_metrics_through_week(
@@ -446,6 +524,47 @@ def test_get_team_metrics_through_week():
     # Value
     assert metrics["pass_offense_epa_per_game"] == pytest.approx(20 / 2)
     assert metrics["rush_offense_epa_per_game"] == pytest.approx(1 / 2)
+
+    # Scoring
+    assert metrics["points_for_per_game"] == pytest.approx(58 / 2)
+    assert metrics["points_allowed_per_game"] == pytest.approx(44 / 2)
+    assert metrics["point_differential_per_game"] == pytest.approx(14 / 2)
+
+    # Passing detail
+    assert metrics["pass_attempts_per_game"] == pytest.approx(70 / 2)
+    assert metrics["pass_completion_percentage"] == pytest.approx(50 / 70)
+    assert metrics["pass_air_yards_per_attempt"] == pytest.approx(490 / 70)
+    assert metrics["pass_yards_after_catch_per_completion"] == pytest.approx(260 / 50)
+    assert metrics["pass_cpoe"] == pytest.approx(5.0)
+    assert metrics["pass_epa_per_attempt"] == pytest.approx(20 / 70)
+
+    # Rushing detail
+    assert metrics["rush_attempts_per_game"] == pytest.approx(50 / 2)
+    assert metrics["rush_epa_per_attempt"] == pytest.approx(1 / 50)
+
+    # Protection and downs
+    assert metrics["sacks_allowed_per_game"] == pytest.approx(3 / 2)
+    assert metrics["first_downs_per_game"] == pytest.approx(47 / 2)
+    assert metrics["third_down_conversion_rate"] == pytest.approx(13 / 26)
+    assert metrics["fourth_down_conversion_rate"] == pytest.approx(3 / 5)
+
+    # Discipline and turnovers
+    assert metrics["penalties_per_game"] == pytest.approx(12 / 2)
+    assert metrics["penalty_yards_per_game"] == pytest.approx(105 / 2)
+    assert metrics["offensive_turnovers_per_game"] == pytest.approx(3 / 2)
+    assert metrics["defensive_turnovers_forced_per_game"] == pytest.approx(3 / 2)
+    assert metrics["turnover_differential_per_game"] == pytest.approx(0.0)
+
+    # Defensive volume / pressure
+    assert metrics["opponent_pass_attempts_per_game"] == pytest.approx(60 / 2)
+    assert metrics["opponent_rush_attempts_per_game"] == pytest.approx(40 / 2)
+    assert metrics["defensive_sacks_per_game"] == pytest.approx(7 / 2)
+    assert metrics["defensive_qb_hits_per_game"] == pytest.approx(14 / 2)
+    assert metrics["defensive_tackles_for_loss_per_game"] == pytest.approx(12 / 2)
+
+    # Special teams
+    assert metrics["field_goals_made_per_game"] == pytest.approx(3 / 2)
+    assert metrics["field_goal_percentage"] == pytest.approx(3 / 5)
 
 
 @pytest.mark.django_db
@@ -1110,6 +1229,33 @@ def test_update_team_profile_through_week(
         "rush_defense_yards_per_game": 92.0,
         "pass_offense_epa_per_game": 6.4,
         "rush_offense_epa_per_game": 1.8,
+        "points_for_per_game": 28.0,
+        "points_allowed_per_game": 21.0,
+        "point_differential_per_game": 7.0,
+        "pass_attempts_per_game": 35.0,
+        "pass_completion_percentage": 0.68,
+        "pass_air_yards_per_attempt": 7.2,
+        "pass_yards_after_catch_per_completion": 5.1,
+        "pass_cpoe": 4.2,
+        "pass_epa_per_attempt": 0.18,
+        "rush_attempts_per_game": 27.0,
+        "rush_epa_per_attempt": 0.07,
+        "sacks_allowed_per_game": 1.8,
+        "first_downs_per_game": 22.0,
+        "third_down_conversion_rate": 0.44,
+        "fourth_down_conversion_rate": 0.61,
+        "penalties_per_game": 5.5,
+        "penalty_yards_per_game": 48.0,
+        "offensive_turnovers_per_game": 1.1,
+        "defensive_turnovers_forced_per_game": 1.4,
+        "turnover_differential_per_game": 0.3,
+        "opponent_pass_attempts_per_game": 33.0,
+        "opponent_rush_attempts_per_game": 24.0,
+        "defensive_sacks_per_game": 2.7,
+        "defensive_qb_hits_per_game": 6.2,
+        "defensive_tackles_for_loss_per_game": 5.0,
+        "field_goals_made_per_game": 1.9,
+        "field_goal_percentage": 0.86,
     }
 
     mock_get_relative_metrics.return_value = {
@@ -1148,6 +1294,34 @@ def test_update_team_profile_through_week(
 
     assert profile.pass_offense_epa_per_game == 6.4
     assert profile.rush_offense_epa_per_game == 1.8
+
+    assert profile.points_for_per_game == 28.0
+    assert profile.points_allowed_per_game == 21.0
+    assert profile.point_differential_per_game == 7.0
+    assert profile.pass_attempts_per_game == 35.0
+    assert profile.pass_completion_percentage == 0.68
+    assert profile.pass_air_yards_per_attempt == 7.2
+    assert profile.pass_yards_after_catch_per_completion == 5.1
+    assert profile.pass_cpoe == 4.2
+    assert profile.pass_epa_per_attempt == 0.18
+    assert profile.rush_attempts_per_game == 27.0
+    assert profile.rush_epa_per_attempt == 0.07
+    assert profile.sacks_allowed_per_game == 1.8
+    assert profile.first_downs_per_game == 22.0
+    assert profile.third_down_conversion_rate == 0.44
+    assert profile.fourth_down_conversion_rate == 0.61
+    assert profile.penalties_per_game == 5.5
+    assert profile.penalty_yards_per_game == 48.0
+    assert profile.offensive_turnovers_per_game == 1.1
+    assert profile.defensive_turnovers_forced_per_game == 1.4
+    assert profile.turnover_differential_per_game == 0.3
+    assert profile.opponent_pass_attempts_per_game == 33.0
+    assert profile.opponent_rush_attempts_per_game == 24.0
+    assert profile.defensive_sacks_per_game == 2.7
+    assert profile.defensive_qb_hits_per_game == 6.2
+    assert profile.defensive_tackles_for_loss_per_game == 5.0
+    assert profile.field_goals_made_per_game == 1.9
+    assert profile.field_goal_percentage == 0.86
 
     assert profile.pass_offense_yards_per_attempt_strength == 0.12
     assert profile.pass_offense_yards_per_game_strength == 0.09
@@ -1221,6 +1395,33 @@ def test_update_team_profile_through_week_is_idempotent(
         "rush_defense_yards_per_game": 92.0,
         "pass_offense_epa_per_game": 6.4,
         "rush_offense_epa_per_game": 1.8,
+        "points_for_per_game": 28.0,
+        "points_allowed_per_game": 21.0,
+        "point_differential_per_game": 7.0,
+        "pass_attempts_per_game": 35.0,
+        "pass_completion_percentage": 0.68,
+        "pass_air_yards_per_attempt": 7.2,
+        "pass_yards_after_catch_per_completion": 5.1,
+        "pass_cpoe": 4.2,
+        "pass_epa_per_attempt": 0.18,
+        "rush_attempts_per_game": 27.0,
+        "rush_epa_per_attempt": 0.07,
+        "sacks_allowed_per_game": 1.8,
+        "first_downs_per_game": 22.0,
+        "third_down_conversion_rate": 0.44,
+        "fourth_down_conversion_rate": 0.61,
+        "penalties_per_game": 5.5,
+        "penalty_yards_per_game": 48.0,
+        "offensive_turnovers_per_game": 1.1,
+        "defensive_turnovers_forced_per_game": 1.4,
+        "turnover_differential_per_game": 0.3,
+        "opponent_pass_attempts_per_game": 33.0,
+        "opponent_rush_attempts_per_game": 24.0,
+        "defensive_sacks_per_game": 2.7,
+        "defensive_qb_hits_per_game": 6.2,
+        "defensive_tackles_for_loss_per_game": 5.0,
+        "field_goals_made_per_game": 1.9,
+        "field_goal_percentage": 0.86,
     }
 
     mock_get_relative_metrics.return_value = {
