@@ -622,3 +622,87 @@ def test_build_training_row_handles_tie(mock_get_profile):
     assert row["home_win"] == 0
     assert row["total_game_points"] == 48
     assert row["score_differential"] == 0
+
+
+@pytest.mark.django_db
+@patch.object(NFLTrainingDataService, "build_training_row")
+def test_build_dataset(mock_build_training_row):
+    league = League.objects.create(
+        name="National Football League",
+        abbreviation="NFL",
+    )
+
+    season = Season.objects.create(
+        league=league,
+        name="2025",
+        start_date="2025-09-01",
+        end_date="2026-02-28",
+    )
+
+    week_1 = Week.objects.create(
+        season=season,
+        number=1,
+    )
+
+    week_2 = Week.objects.create(
+        season=season,
+        number=2,
+    )
+
+    bills = Team.objects.create(
+        external_id="BUF",
+        slug="buffalo-bills",
+        city="Buffalo",
+        name="Bills",
+        abbreviation="BUF",
+    )
+
+    chiefs = Team.objects.create(
+        external_id="KC",
+        slug="kansas-city-chiefs",
+        city="Kansas City",
+        name="Chiefs",
+        abbreviation="KC",
+    )
+
+    Game.objects.create(
+        external_id="2025_01_BUF_KC",
+        season=season,
+        week=week_1,
+        home_team=bills,
+        away_team=chiefs,
+        home_score=24,
+        away_score=17,
+        start_time="2025-09-04T18:00:00Z",
+        status=Game.Status.FINAL,
+        phase="regular_season",
+    )
+
+    Game.objects.create(
+        external_id="2025_02_KC_BUF",
+        season=season,
+        week=week_2,
+        home_team=chiefs,
+        away_team=bills,
+        home_score=20,
+        away_score=27,
+        start_time="2025-09-11T18:00:00Z",
+        status=Game.Status.FINAL,
+        phase="regular_season",
+    )
+
+    mock_build_training_row.side_effect = [
+        {"game_id": "2025_01_BUF_KC"},
+        {"game_id": "2025_02_KC_BUF"},
+    ]
+
+    rows = NFLTrainingDataService.build_dataset(
+        season=season,
+    )
+
+    assert rows == [
+        {"game_id": "2025_01_BUF_KC"},
+        {"game_id": "2025_02_KC_BUF"},
+    ]
+
+    assert mock_build_training_row.call_count == 2

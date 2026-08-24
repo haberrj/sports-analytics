@@ -169,3 +169,21 @@ class NFLTrainingDataService(TrainingDataService[NFLTeamProfile, Game, Team]):
             "away_field_goal_percentage": away_profile.field_goal_percentage,
         }
         return row
+
+    @staticmethod
+    def build_dataset(season: Season | None = None) -> list[dict]:
+        games = Game.objects.filter(
+            season__league__abbreviation="NFL", home_score__isnull=False, away_score__isnull=False
+        )
+        if season is not None:
+            games = games.filter(season=season)
+        games = games.select_related("season", "week", "home_team", "away_team").order_by(
+            "season__start_date", "week__number"
+        )
+        rows = []
+        for game in games:
+            row = NFLTrainingDataService.build_training_row(game)
+            if row is None:
+                continue
+            rows.append(row)
+        return rows
