@@ -3,6 +3,10 @@ name: CI
 on:
   pull_request:
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -60,5 +64,50 @@ jobs:
       - name: Apply migrations
         run: uv run python src/manage.py migrate
 
-      - name: Run tests
-        run: uv run pytest
+      - name: Run tests with coverage
+        run: |
+          set -o pipefail
+          uv run pytest \
+          --cov=src \
+          --cov-report=term-missing \
+          --cov-report=xml \
+          --cov-fail-under=80 \
+          | tee coverage.txt
+      
+      - name: Add coverage to job summary
+        if: always()
+        run: |
+          {
+            echo "## Test Coverage"
+            echo
+            echo '```text'
+            cat coverage.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            coverage.xml
+            coverage.txt
+            htmlcov/
+          retention-days: 30
+      
+      - name: Comment coverage on PR
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          COVERAGE=$(grep '^TOTAL' coverage.txt | awk '{print $NF}')
+
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --edit-last \
+            --create-if-none \
+            --body "### Test Coverage
+
+          **Total coverage: ${COVERAGE}**
+
+          Required coverage: **80%**"

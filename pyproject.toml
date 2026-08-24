@@ -1,7 +1,7 @@
 [project]
-name = "nfl-analysis"
+name = "sports-analytics"
 version = "0.1.0"
-description = "NFL analytics, prediction, betting, and fantasy football platform"
+description = "Professional sports analytics, prediction, betting, and fantasy league platform"
 readme = "README.md"
 authors = [
     { name = "Ron Haber", email = "haberrj95@gmail.com" }
@@ -14,11 +14,13 @@ dependencies = [
     "numpy>=2.0",
     "pandas>=2.2",
     "scikit-learn>=1.7",
+    "nflreadpy>=0.1.5",
 ]
 
 [dependency-groups]
 dev = [
     "pytest>=8.0",
+    "pytest-cov>=7.1.0",
     "pytest-django>=4.9",
     "ruff>=0.12",
 ]
@@ -26,6 +28,9 @@ dev = [
 [tool.ruff]
 line-length = 120
 target-version = "py312"
+exclude = [
+    "**/migrations/*.py",
+]
 
 [tool.ruff.lint]
 select = [
@@ -43,3 +48,16 @@ python_files = [
     "test_*.py",
     "*_test.py",
 ]
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/migrations/*",
+    "*/tests/*",
+    "src/manage.py",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+fail_under = 80
