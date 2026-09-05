@@ -1,3 +1,6 @@
+import pickle
+from pathlib import Path
+
 from games.models import Game, Season
 from predictions.base import TrainingDataService
 from stats.models import NFLTeamProfile
@@ -5,6 +8,11 @@ from teams.models import Team
 
 
 class NFLTrainingDataService(TrainingDataService[NFLTeamProfile, Game, Team]):
+    CACHE_DIRECTORY = (
+        Path(__file__).resolve().parents[3]
+        / "data"
+        / "cache"
+    )
     @staticmethod
     def get_profile_before_game(team: Team, game: Game) -> NFLTeamProfile | None:
         current_season_profile = (
@@ -171,19 +179,36 @@ class NFLTrainingDataService(TrainingDataService[NFLTeamProfile, Game, Team]):
         return row
 
     @staticmethod
-    def build_dataset(season: Season | None = None) -> list[dict]:
+    def build_dataset(season: Season | None = None, force_rebuild: bool = False) -> list[dict]:
+        season_name = season.name if season is not None else "all"
+        cache_path = (
+            NFLTrainingDataService.CACHE_DIRECTORY
+            / f"nfl_training_dataset_{season_name}.pkl"
+        )
+        if cache_path.exists() and not force_rebuild:
+            with cache_path.open("rb") as file:
+                return pickle.load(file)
+        
         games = Game.objects.filter(
             season__league__abbreviation="NFL", home_score__isnull=False, away_score__isnull=False
         )
+
         if season is not None:
             games = games.filter(season=season)
+
         games = games.select_related("season", "week", "home_team", "away_team").order_by(
             "season__start_date", "week__number"
         )
+
         rows = []
         for game in games:
             row = NFLTrainingDataService.build_training_row(game)
             if row is None:
                 continue
             rows.append(row)
+
+        NFLTrainingDataService.CACHE_DIRECTORY.mkdir(parents=True, exist_ok=True)
+        with cache_path.open("wb") as file:
+            pickle.dump(rows, file)
+
         return rows

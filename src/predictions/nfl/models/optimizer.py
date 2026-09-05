@@ -5,10 +5,13 @@ from dataclasses import dataclass
 from random import Random
 from typing import Any
 
-from predictions.nfl.models.base import ClassificationModel
+import optuna
+from optuna import Trial
+
 from predictions.nfl.preprocessing import NFLPreprocessingService
 
 
+@dataclass
 class OptimizationResult:
     parameters: dict[str, Any]
     accuracy: float
@@ -19,19 +22,29 @@ class OptimizationResult:
 
 class ClassificationModelOptimizer:
     """Optimize classification model hyperparameters using walk-forward validation."""
+    VALID_OBJECTIVE = {
+        "accuracy",
+        "log_loss",
+        "brier_score",
+        "roc_auc"
+    }
 
     def __init__(
             self, model_factory: Callable,
             validation_seasons: list[int],
             objective: str = "log_loss",
-            random_state: int = 42
+            random_state: int = 42,
+            model_parameters: dict[str, Any] | None = None,
         ) -> None:
+        if objective not in self.VALID_OBJECTIVE:
+            raise ValueError(f"Unsupported objective: {objective}")
         self.model_factory: Callable = model_factory
         self.validation_seasons: list[int] = validation_seasons
         self.objective: str = objective
         self.random: Random = Random(random_state)
+        self.model_parameters: dict[str, str] = model_parameters or {}
 
-    def evaluation_parameters(self, dataset: list[dict], parameters: dict[str, Any], target: str) -> OptimizationResult:
+    def evaluate_parameters(self, dataset: list[dict], parameters: dict[str, Any], target: str) -> OptimizationResult:
         """Evaluate one hyperparameter configuration across validation seasons.
 
         Args:
@@ -67,7 +80,7 @@ class ClassificationModelOptimizer:
                 target,
             )
 
-            model = self.model_factory(**parameters)
+            model = self.model_factory(**parameters, **self.model_parameters)
             model.fit(x_train, y_train)
 
             scores.append(
@@ -118,24 +131,10 @@ class ClassificationModelOptimizer:
 
         return results
 
-    def sample_random_forest_parameters(random: Random) -> dict[str, Any]:
-        return {
-            "max_depth": random.randint(1, 20),
-            "min_samples_leaf": random.randint(1, 15),
-            "n_estimators": random.randint(25, 150),
-            "max_features": random.choice(
-                [
-                    "sqrt",
-                    "log2",
-                    0.25,
-                    0.5,
-                    0.75,
-                    1.0,
-                ]
-            ),
-        }
-
     def get_best_result(self, results: list[OptimizationResult]) -> OptimizationResult:
+        if not results:
+            raise ValueError("Optimization results cannot be empty.")
+    
         if self.objective == "log_loss":
             return min(results, key=lambda result: result.log_loss)
 
@@ -149,3 +148,62 @@ class ClassificationModelOptimizer:
             return max(results, key=lambda result: result.roc_auc)
 
         raise ValueError(f"Unsupported objective: {self.objective}")
+
+    def bayesian_search(
+        self,
+        dataset: list[dict],
+        parameter_suggester: Callable[[Trial], dict[str, Any]],
+        target: str,
+        iterations: int = 50,
+    ) -> tuple[OptimizationResult, list[OptimizationResult]]:
+        """Optimize hyperparameters using Bayesian optimization.
+    
+        Args:
+            dataset: Historical training rows.
+            parameter_suggester: Function that suggests model parameters
+                for an Optuna trial.
+            target: Prediction target to use.
+            iterations: Number of optimization trials.
+    
+        Returns:
+            The best optimization result and all evaluated results.
+        """
+        results: list[OptimizationResult] = []
+    
+        direction = (
+            "minimize"
+            if self.objective in {"log_loss", "brier_score"}
+            else "maximize"
+        )
+    
+        sampler = optuna.samplers.TPESampler(
+            seed=self.random.randint(0, 2**32 - 1),
+            n_startup_trials=10,
+        )
+    
+        study = optuna.create_study(
+            direction=direction,
+            sampler=sampler,
+        )
+    
+        def objective(trial: Trial) -> float:
+            parameters = parameter_suggester(trial)
+    
+            result = self.evaluate_parameters(
+                dataset=dataset,
+                parameters=parameters,
+                target=target,
+            )
+    
+            results.append(result)
+    
+            return getattr(result, self.objective)
+    
+        study.optimize(
+            objective,
+            n_trials=iterations,
+        )
+    
+        best_result = self.get_best_result(results)
+    
+        return best_result, results
