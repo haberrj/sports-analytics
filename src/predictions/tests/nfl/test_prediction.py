@@ -4,14 +4,8 @@ from predictions.nfl.models.artifacts import NFLModelArtifact
 from predictions.nfl.prediction import NFLPredictionService
 
 
-@patch(
-    "predictions.nfl.prediction."
-    "NFLModelArtifactService.load"
-)
-@patch(
-    "predictions.nfl.prediction."
-    "NFLTrainingDataService.build_feature_row"
-)
+@patch("predictions.nfl.prediction.NFLModelArtifactService.load")
+@patch("predictions.nfl.prediction.NFLTrainingDataService.build_feature_row")
 def test_predict_probability(
     mock_build_feature_row,
     mock_load,

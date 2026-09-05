@@ -18,11 +18,7 @@ class NFLModelArtifact:
 
 
 class NFLModelArtifactService:
-    MODEL_DIRECTORY = (
-        Path(__file__).resolve().parents[4]
-        / "data"
-        / "models"
-    )
+    MODEL_DIRECTORY = Path(__file__).resolve().parents[4] / "data" / "models"
 
     @staticmethod
     def save(
@@ -38,23 +34,14 @@ class NFLModelArtifactService:
             target=target,
             through_season=through_season,
             parameters=parameters,
-            trained_at=datetime.now(timezone.utc)  # noqa: UP017
+            trained_at=datetime.now(timezone.utc),  # noqa: UP017
         )
 
-        model_directory = (
-            NFLModelArtifactService.MODEL_DIRECTORY
-            / target
-        )
+        model_directory = NFLModelArtifactService.MODEL_DIRECTORY / target
 
-        model_directory.mkdir(
-            parents=True,
-            exist_ok=True
-        )
+        model_directory.mkdir(parents=True, exist_ok=True)
 
-        model_path = (
-            model_directory
-            / f"{model_type}.pkl"
-        )
+        model_path = model_directory / f"{model_type}.pkl"
 
         with model_path.open("wb") as file:
             pickle.dump(artifact, file)
@@ -62,15 +49,8 @@ class NFLModelArtifactService:
         return model_path
 
     @staticmethod
-    def load(
-        model_type: str,
-        target: str
-    ) -> NFLModelArtifact:
-        model_path = (
-            NFLModelArtifactService.MODEL_DIRECTORY
-            / target
-            / f"{model_type}.pkl"
-        )
+    def load(model_type: str, target: str) -> NFLModelArtifact:
+        model_path = NFLModelArtifactService.MODEL_DIRECTORY / target / f"{model_type}.pkl"
 
         if not model_path.exists():
             raise FileNotFoundError(f"No saved model found at {model_path}")

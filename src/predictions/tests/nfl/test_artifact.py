@@ -41,11 +41,7 @@ def test_save_and_load_model_artifact(tmp_path):
             target="home_win",
         )
 
-    assert model_path == (
-        tmp_path
-        / "home_win"
-        / "random_forest.pkl"
-    )
+    assert model_path == (tmp_path / "home_win" / "random_forest.pkl")
 
     assert model_path.exists()
     assert artifact.model_type == "random_forest"

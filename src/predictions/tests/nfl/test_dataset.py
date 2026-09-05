@@ -491,10 +491,7 @@ def test_build_training_row():
     assert row["home_defensive_sacks_per_game"] == 3.0
     assert row["home_turnover_differential_per_game"] == 1.0
     assert row["home_field_goal_percentage"] == 0.9
-    assert (
-        row["home_pass_offense_yards_per_attempt_strength"]
-        == 0.15
-    )
+    assert row["home_pass_offense_yards_per_attempt_strength"] == 0.15
 
     # Representative away features
     assert row["away_points_for_per_game"] == 27.0
@@ -504,10 +501,7 @@ def test_build_training_row():
     assert row["away_defensive_sacks_per_game"] == 2.0
     assert row["away_turnover_differential_per_game"] == -0.5
     assert row["away_field_goal_percentage"] == 0.8
-    assert (
-        row["away_pass_offense_yards_per_attempt_strength"]
-        == 0.05
-    )
+    assert row["away_pass_offense_yards_per_attempt_strength"] == 0.05
 
     # Targets
     assert row["home_score"] == 31
@@ -810,9 +804,7 @@ def test_build_dataset_uses_cache(tmp_path):
         {"game_id": "cached_game"},
     ]
 
-    cache_path = (
-        tmp_path / "nfl_training_dataset_all.pkl"
-    )
+    cache_path = tmp_path / "nfl_training_dataset_all.pkl"
 
     with cache_path.open("wb") as file:
         pickle.dump(cached_rows, file)

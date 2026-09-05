@@ -54,17 +54,15 @@ class NFLTrainingDataService(TrainingDataService[NFLTeamProfile, Game, Team]):
         if game.home_score is None or game.away_score is None:
             return None
 
-        row.update({
-            "home_score": game.home_score,
-            "away_score": game.away_score,
-            "home_win": game.home_score > game.away_score,
-            "total_game_points": (
-                game.home_score + game.away_score
-            ),
-            "score_differential": (
-                game.home_score - game.away_score
-            ),
-        })
+        row.update(
+            {
+                "home_score": game.home_score,
+                "away_score": game.away_score,
+                "home_win": game.home_score > game.away_score,
+                "total_game_points": (game.home_score + game.away_score),
+                "score_differential": (game.home_score - game.away_score),
+            }
+        )
         return row
 
     @staticmethod
@@ -101,15 +99,9 @@ class NFLTrainingDataService(TrainingDataService[NFLTeamProfile, Game, Team]):
 
     @staticmethod
     def build_feature_row(game: Game) -> dict | None:
-        home_profile = NFLTrainingDataService.get_profile_before_game(
-            team=game.home_team,
-            game=game
-        )
+        home_profile = NFLTrainingDataService.get_profile_before_game(team=game.home_team, game=game)
 
-        away_profile = NFLTrainingDataService.get_profile_before_game(
-            team=game.away_team,
-            game=game
-        )
+        away_profile = NFLTrainingDataService.get_profile_before_game(team=game.away_team, game=game)
 
         if home_profile is None or away_profile is None:
             return None

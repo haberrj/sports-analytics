@@ -74,23 +74,14 @@ class NFLTrainingService:
     ) -> ClassificationModel:
         dataset = NFLTrainingDataService.build_dataset()
 
-        training_rows = [
-            row
-            for row in dataset
-            if row["season"] <= through_season
-        ]
+        training_rows = [row for row in dataset if row["season"] <= through_season]
 
         if not training_rows:
-            raise ValueError(
-                f"No training data available through "
-                f"{through_season} season."
-            )
+            raise ValueError(f"No training data available through {through_season} season.")
 
-        features, targets = (
-            NFLPreprocessingService.split_features_target(
-                rows=training_rows,
-                target=target,
-            )
+        features, targets = NFLPreprocessingService.split_features_target(
+            rows=training_rows,
+            target=target,
         )
 
         model_parameters = model_parameters or {}

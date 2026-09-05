@@ -11,10 +11,7 @@ class NFLPredictionService:
         if features is None:
             raise ValueError(f"Unable to build prediction features for game {game.external_id}.")
 
-        artifact = NFLModelArtifactService.load(
-            model_type=model_type,
-            target=target
-        )
+        artifact = NFLModelArtifactService.load(model_type=model_type, target=target)
 
         probabilities = artifact.model.predict_proba([features])
 

@@ -8,14 +8,8 @@ from predictions.nfl.models.random_forest import NFLRandomForestModel
 from predictions.nfl.models.training import NFLTrainingService
 
 
-@patch(
-    "predictions.nfl.models.training."
-    "ClassificationModelOptimizer"
-)
-@patch(
-    "predictions.nfl.models.training."
-    "NFLTrainingDataService.build_dataset"
-)
+@patch("predictions.nfl.models.training.ClassificationModelOptimizer")
+@patch("predictions.nfl.models.training.NFLTrainingDataService.build_dataset")
 def test_optimize_model(
     mock_build_dataset,
     mock_optimizer_class,
@@ -50,9 +44,7 @@ def test_optimize_model(
 
     result = NFLTrainingService.optimize_model(
         model_class=NFLRandomForestModel,
-        parameter_suggester=(
-            NFLRandomForestModel.suggest_random_forest_parameters
-        ),
+        parameter_suggester=(NFLRandomForestModel.suggest_random_forest_parameters),
         validation_seasons=[
             2020,
             2021,
@@ -85,9 +77,7 @@ def test_optimize_model(
 
     optimizer.bayesian_search.assert_called_once_with(
         dataset=dataset,
-        parameter_suggester=(
-            NFLRandomForestModel.suggest_random_forest_parameters
-        ),
+        parameter_suggester=(NFLRandomForestModel.suggest_random_forest_parameters),
         target="home_win",
         iterations=100,
     )
@@ -95,14 +85,8 @@ def test_optimize_model(
     assert result == expected_result
 
 
-@patch(
-    "predictions.nfl.models.training."
-    "ClassificationModelOptimizer"
-)
-@patch(
-    "predictions.nfl.models.training."
-    "NFLTrainingDataService.build_dataset"
-)
+@patch("predictions.nfl.models.training.ClassificationModelOptimizer")
+@patch("predictions.nfl.models.training.NFLTrainingDataService.build_dataset")
 def test_evaluate_model(
     mock_build_dataset,
     mock_optimizer_class,
@@ -163,14 +147,8 @@ def test_evaluate_model(
     assert result == expected_result
 
 
-@patch(
-    "predictions.nfl.models.training."
-    "NFLPreprocessingService.split_features_target"
-)
-@patch(
-    "predictions.nfl.models.training."
-    "NFLTrainingDataService.build_dataset"
-)
+@patch("predictions.nfl.models.training.NFLPreprocessingService.split_features_target")
+@patch("predictions.nfl.models.training.NFLTrainingDataService.build_dataset")
 def test_train_model(
     mock_build_dataset,
     mock_split_features_target,
@@ -253,10 +231,7 @@ def test_train_model(
     assert result == mock_model
 
 
-@patch(
-    "predictions.nfl.models.training."
-    "NFLTrainingDataService.build_dataset"
-)
+@patch("predictions.nfl.models.training.NFLTrainingDataService.build_dataset")
 def test_train_model_raises_when_no_training_data(
     mock_build_dataset,
 ):
@@ -266,10 +241,7 @@ def test_train_model_raises_when_no_training_data(
 
     with pytest.raises(
         ValueError,
-        match=(
-            "No training data available "
-            "through 2024 season."
-        ),
+        match=("No training data available through 2024 season."),
     ):
         NFLTrainingService.train_model(
             model_class=NFLRandomForestModel,
@@ -279,10 +251,7 @@ def test_train_model_raises_when_no_training_data(
         )
 
 
-@patch(
-    "predictions.nfl.models.training."
-    "NFLModelArtifactService.save"
-)
+@patch("predictions.nfl.models.training.NFLModelArtifactService.save")
 @patch.object(
     NFLTrainingService,
     "train_model",
