@@ -94,12 +94,12 @@ class ClassificationModel(PredictionModel):
     def get_performance_stats(self, features, targets: list[Any]) -> dict[str, float]:
         preds = self.predict(features)
         preds_prob = self.predict_proba(features)
-        output ={
-            'baseline_accuracy': self.baseline_accuracy(targets),
-            'accuracy': accuracy_score(targets, preds),
-            'log_loss': log_loss(targets, preds_prob),
-            'brier_score': brier_score_loss(targets, preds_prob),
-            'roc_auc': roc_auc_score(targets, preds_prob),
+        output = {
+            "baseline_accuracy": self.baseline_accuracy(targets),
+            "accuracy": accuracy_score(targets, preds),
+            "log_loss": log_loss(targets, preds_prob),
+            "brier_score": brier_score_loss(targets, preds_prob),
+            "roc_auc": roc_auc_score(targets, preds_prob),
         }
         return output
 

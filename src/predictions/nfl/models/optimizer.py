@@ -22,20 +22,17 @@ class OptimizationResult:
 
 class ClassificationModelOptimizer:
     """Optimize classification model hyperparameters using walk-forward validation."""
-    VALID_OBJECTIVE = {
-        "accuracy",
-        "log_loss",
-        "brier_score",
-        "roc_auc"
-    }
+
+    VALID_OBJECTIVE = {"accuracy", "log_loss", "brier_score", "roc_auc"}
 
     def __init__(
-            self, model_factory: Callable,
-            validation_seasons: list[int],
-            objective: str = "log_loss",
-            random_state: int = 42,
-            model_parameters: dict[str, Any] | None = None,
-        ) -> None:
+        self,
+        model_factory: Callable,
+        validation_seasons: list[int],
+        objective: str = "log_loss",
+        random_state: int = 42,
+        model_parameters: dict[str, Any] | None = None,
+    ) -> None:
         if objective not in self.VALID_OBJECTIVE:
             raise ValueError(f"Unsupported objective: {objective}")
         self.model_factory: Callable = model_factory
@@ -58,17 +55,9 @@ class ClassificationModelOptimizer:
         scores = []
 
         for validation_season in self.validation_seasons:
-            training_rows = [
-                row
-                for row in dataset
-                if row["season"] < validation_season
-            ]
+            training_rows = [row for row in dataset if row["season"] < validation_season]
 
-            validation_rows = [
-                row
-                for row in dataset
-                if row["season"] == validation_season
-            ]
+            validation_rows = [row for row in dataset if row["season"] == validation_season]
 
             x_train, y_train = NFLPreprocessingService.split_features_target(
                 training_rows,
@@ -134,7 +123,7 @@ class ClassificationModelOptimizer:
     def get_best_result(self, results: list[OptimizationResult]) -> OptimizationResult:
         if not results:
             raise ValueError("Optimization results cannot be empty.")
-    
+
         if self.objective == "log_loss":
             return min(results, key=lambda result: result.log_loss)
 
@@ -157,53 +146,49 @@ class ClassificationModelOptimizer:
         iterations: int = 50,
     ) -> tuple[OptimizationResult, list[OptimizationResult]]:
         """Optimize hyperparameters using Bayesian optimization.
-    
+
         Args:
             dataset: Historical training rows.
             parameter_suggester: Function that suggests model parameters
                 for an Optuna trial.
             target: Prediction target to use.
             iterations: Number of optimization trials.
-    
+
         Returns:
             The best optimization result and all evaluated results.
         """
         results: list[OptimizationResult] = []
-    
-        direction = (
-            "minimize"
-            if self.objective in {"log_loss", "brier_score"}
-            else "maximize"
-        )
-    
+
+        direction = "minimize" if self.objective in {"log_loss", "brier_score"} else "maximize"
+
         sampler = optuna.samplers.TPESampler(
             seed=self.random.randint(0, 2**32 - 1),
             n_startup_trials=10,
         )
-    
+
         study = optuna.create_study(
             direction=direction,
             sampler=sampler,
         )
-    
+
         def objective(trial: Trial) -> float:
             parameters = parameter_suggester(trial)
-    
+
             result = self.evaluate_parameters(
                 dataset=dataset,
                 parameters=parameters,
                 target=target,
             )
-    
+
             results.append(result)
-    
+
             return getattr(result, self.objective)
-    
+
         study.optimize(
             objective,
             n_trials=iterations,
         )
-    
+
         best_result = self.get_best_result(results)
-    
+
         return best_result, results

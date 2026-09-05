@@ -626,7 +626,7 @@ def test_build_training_row_handles_tie(mock_get_profile):
 
 @pytest.mark.django_db
 @patch.object(NFLTrainingDataService, "build_training_row")
-def test_build_dataset(mock_build_training_row):
+def test_build_dataset(mock_build_training_row, tmp_path):
     league = League.objects.create(
         name="National Football League",
         abbreviation="NFL",
@@ -696,9 +696,15 @@ def test_build_dataset(mock_build_training_row):
         {"game_id": "2025_02_KC_BUF"},
     ]
 
-    rows = NFLTrainingDataService.build_dataset(
-        season=season,
-    )
+    with patch.object(
+        NFLTrainingDataService,
+        "CACHE_DIRECTORY",
+        tmp_path,
+    ):
+        rows = NFLTrainingDataService.build_dataset(
+            season=season,
+            force_rebuild=True,
+        )
 
     assert rows == [
         {"game_id": "2025_01_BUF_KC"},

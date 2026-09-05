@@ -157,11 +157,7 @@ def test_random_search_is_reproducible_with_random_state(dataset):
         iterations=5,
     )
 
-    assert [
-        result.parameters for result in results_1
-    ] == [
-        result.parameters for result in results_2
-    ]
+    assert [result.parameters for result in results_1] == [result.parameters for result in results_2]
 
 
 def test_get_best_result_uses_lowest_log_loss():
@@ -449,11 +445,7 @@ def test_bayesian_search_is_reproducible_with_same_random_state(dataset):
         iterations=10,
     )
 
-    assert [
-        result.parameters for result in results_1
-    ] == [
-        result.parameters for result in results_2
-    ]
+    assert [result.parameters for result in results_1] == [result.parameters for result in results_2]
 
 
 def test_bayesian_search_uses_lowest_brier_when_configured(dataset):

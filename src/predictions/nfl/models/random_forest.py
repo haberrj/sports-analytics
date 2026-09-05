@@ -19,28 +19,29 @@ class NFLRandomForestModel(ClassificationModel):
     """
 
     def __init__(
-            self,
-            n_estimators: int = 100,
-            max_depth: int | None = None,
-            min_samples_leaf: int = 1,
-            max_features: str | float | None = "sqrt",
-            random_state: int = 42,
-            n_jobs: int = -1,
-        ) -> None:
+        self,
+        n_estimators: int = 100,
+        max_depth: int | None = None,
+        min_samples_leaf: int = 1,
+        max_features: str | float | None = "sqrt",
+        random_state: int = 42,
+        n_jobs: int = -1,
+    ) -> None:
         super().__init__()
         self.model: Pipeline = Pipeline(
             [
                 ("imputer", SimpleImputer(strategy="median")),
                 (
-                    "classifier", RandomForestClassifier(
+                    "classifier",
+                    RandomForestClassifier(
                         n_estimators=n_estimators,
                         max_depth=max_depth,
                         min_samples_leaf=min_samples_leaf,
                         max_features=max_features,
                         random_state=random_state,
-                        n_jobs=n_jobs
-                    )
-                )
+                        n_jobs=n_jobs,
+                    ),
+                ),
             ]
         )
 

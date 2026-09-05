@@ -8,11 +8,8 @@ from teams.models import Team
 
 
 class NFLTrainingDataService(TrainingDataService[NFLTeamProfile, Game, Team]):
-    CACHE_DIRECTORY = (
-        Path(__file__).resolve().parents[3]
-        / "data"
-        / "cache"
-    )
+    CACHE_DIRECTORY = Path(__file__).resolve().parents[3] / "data" / "cache"
+
     @staticmethod
     def get_profile_before_game(team: Team, game: Game) -> NFLTeamProfile | None:
         current_season_profile = (
@@ -181,14 +178,11 @@ class NFLTrainingDataService(TrainingDataService[NFLTeamProfile, Game, Team]):
     @staticmethod
     def build_dataset(season: Season | None = None, force_rebuild: bool = False) -> list[dict]:
         season_name = season.name if season is not None else "all"
-        cache_path = (
-            NFLTrainingDataService.CACHE_DIRECTORY
-            / f"nfl_training_dataset_{season_name}.pkl"
-        )
+        cache_path = NFLTrainingDataService.CACHE_DIRECTORY / f"nfl_training_dataset_{season_name}.pkl"
         if cache_path.exists() and not force_rebuild:
             with cache_path.open("rb") as file:
                 return pickle.load(file)
-        
+
         games = Game.objects.filter(
             season__league__abbreviation="NFL", home_score__isnull=False, away_score__isnull=False
         )
