@@ -223,5 +223,5 @@ __marimo__/
 coverage.xml
 htmlcov/
 
-# Dataset Cache for ML training
-data/cache
+# Cache for ML training
+data

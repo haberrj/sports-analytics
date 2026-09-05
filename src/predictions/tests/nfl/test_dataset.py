@@ -1,3 +1,4 @@
+import pickle
 from unittest.mock import patch
 
 import pytest
@@ -298,6 +299,84 @@ def test_get_profile_before_game_returns_none_without_history():
 
 
 @pytest.mark.django_db
+@patch.object(
+    NFLTrainingDataService,
+    "get_profile_before_game",
+)
+def test_build_feature_row_for_upcoming_game(mock_get_profile):
+    league = League.objects.create(
+        name="National Football League",
+        abbreviation="NFL",
+    )
+
+    season = Season.objects.create(
+        league=league,
+        name="2025",
+        start_date="2025-09-01",
+        end_date="2026-02-28",
+    )
+
+    week = Week.objects.create(
+        season=season,
+        number=5,
+    )
+
+    bills = Team.objects.create(
+        external_id="BUF",
+        slug="buffalo-bills",
+        city="Buffalo",
+        name="Bills",
+        abbreviation="BUF",
+    )
+
+    chiefs = Team.objects.create(
+        external_id="KC",
+        slug="kansas-city-chiefs",
+        city="Kansas City",
+        name="Chiefs",
+        abbreviation="KC",
+    )
+
+    profile = NFLTeamProfile(
+        team=bills,
+        season=season,
+        through_week=week,
+    )
+
+    mock_get_profile.return_value = profile
+
+    game = Game.objects.create(
+        external_id="2025_05_BUF_KC",
+        season=season,
+        week=week,
+        home_team=bills,
+        away_team=chiefs,
+        home_score=None,
+        away_score=None,
+        neutral_site=False,
+        start_time="2025-10-05T18:00:00Z",
+        status=Game.Status.SCHEDULED,
+        phase="regular_season",
+    )
+
+    row = NFLTrainingDataService.build_feature_row(game)
+
+    assert row is not None
+    assert row["game_id"] == "2025_05_BUF_KC"
+    assert row["season"] == 2025
+    assert row["week"] == 5
+    assert row["home_team"] == "BUF"
+    assert row["away_team"] == "KC"
+    assert row["neutral_site"] is False
+
+    assert "home_score" not in row
+    assert "away_score" not in row
+    assert "home_win" not in row
+    assert "total_game_points" not in row
+    assert "score_differential" not in row
+
+
+@pytest.mark.django_db
 def test_build_training_row():
     league = League.objects.create(
         name="National Football League",
@@ -412,7 +491,10 @@ def test_build_training_row():
     assert row["home_defensive_sacks_per_game"] == 3.0
     assert row["home_turnover_differential_per_game"] == 1.0
     assert row["home_field_goal_percentage"] == 0.9
-    assert row["home_pass_offense_yards_per_attempt_strength"] == 0.15
+    assert (
+        row["home_pass_offense_yards_per_attempt_strength"]
+        == 0.15
+    )
 
     # Representative away features
     assert row["away_points_for_per_game"] == 27.0
@@ -422,7 +504,10 @@ def test_build_training_row():
     assert row["away_defensive_sacks_per_game"] == 2.0
     assert row["away_turnover_differential_per_game"] == -0.5
     assert row["away_field_goal_percentage"] == 0.8
-    assert row["away_pass_offense_yards_per_attempt_strength"] == 0.05
+    assert (
+        row["away_pass_offense_yards_per_attempt_strength"]
+        == 0.05
+    )
 
     # Targets
     assert row["home_score"] == 31
@@ -559,7 +644,10 @@ def test_build_training_row_returns_none_when_game_has_no_score():
 
 
 @pytest.mark.django_db
-@patch.object(NFLTrainingDataService, "get_profile_before_game")
+@patch.object(
+    NFLTrainingDataService,
+    "get_profile_before_game",
+)
 def test_build_training_row_handles_tie(mock_get_profile):
     league = League.objects.create(
         name="National Football League",
@@ -625,7 +713,10 @@ def test_build_training_row_handles_tie(mock_get_profile):
 
 
 @pytest.mark.django_db
-@patch.object(NFLTrainingDataService, "build_training_row")
+@patch.object(
+    NFLTrainingDataService,
+    "build_training_row",
+)
 def test_build_dataset(mock_build_training_row, tmp_path):
     league = League.objects.create(
         name="National Football League",
@@ -712,3 +803,30 @@ def test_build_dataset(mock_build_training_row, tmp_path):
     ]
 
     assert mock_build_training_row.call_count == 2
+
+
+def test_build_dataset_uses_cache(tmp_path):
+    cached_rows = [
+        {"game_id": "cached_game"},
+    ]
+
+    cache_path = (
+        tmp_path / "nfl_training_dataset_all.pkl"
+    )
+
+    with cache_path.open("wb") as file:
+        pickle.dump(cached_rows, file)
+
+    with patch.object(
+        NFLTrainingDataService,
+        "CACHE_DIRECTORY",
+        tmp_path,
+    ):
+        with patch.object(
+            NFLTrainingDataService,
+            "build_training_row",
+        ) as mock_build_training_row:
+            rows = NFLTrainingDataService.build_dataset()
+
+    assert rows == cached_rows
+    mock_build_training_row.assert_not_called()
