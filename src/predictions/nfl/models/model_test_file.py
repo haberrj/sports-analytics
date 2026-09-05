@@ -22,22 +22,19 @@ test_season = [2024]
 optimizer = ClassificationModelOptimizer(
     NFLRandomForestModel,
     validation_seasons=validation_seasons,
-    objective='log_loss',
+    objective="log_loss",
     random_state=42,
 )
 
 best, results = optimizer.bayesian_search(
     dataset=dataset,
     parameter_suggester=NFLRandomForestModel.suggest_random_forest_parameters,
-    target='home_win',
-    iterations=100
+    target="home_win",
+    iterations=100,
 )
 
 test_evaluator = ClassificationModelOptimizer(
-    NFLRandomForestModel,
-    validation_seasons=test_season,
-    objective='log_loss',
-    random_state=42
+    NFLRandomForestModel, validation_seasons=test_season, objective="log_loss", random_state=42
 )
 
 test_result = test_evaluator.evaluate_parameters(
