@@ -809,14 +809,17 @@ def test_build_dataset_uses_cache(tmp_path):
     with cache_path.open("wb") as file:
         pickle.dump(cached_rows, file)
 
-    with patch.object(
-        NFLTrainingDataService,
-        "CACHE_DIRECTORY",
-        tmp_path,
-    ), patch.object(
-        NFLTrainingDataService,
-        "build_training_row",
-    ) as mock_build_training_row:
+    with (
+        patch.object(
+            NFLTrainingDataService,
+            "CACHE_DIRECTORY",
+            tmp_path,
+        ),
+        patch.object(
+            NFLTrainingDataService,
+            "build_training_row",
+        ) as mock_build_training_row,
+    ):
         rows = NFLTrainingDataService.build_dataset()
 
     assert rows == cached_rows

@@ -56,13 +56,16 @@ def test_save_and_load_model_artifact(tmp_path):
 
 
 def test_load_model_artifact_raises_when_missing(tmp_path):
-    with patch.object(
-        NFLModelArtifactService,
-        "MODEL_DIRECTORY",
-        tmp_path,
-    ), pytest.raises(
-        FileNotFoundError,
-        match="No saved model found",
+    with (
+        patch.object(
+            NFLModelArtifactService,
+            "MODEL_DIRECTORY",
+            tmp_path,
+        ),
+        pytest.raises(
+            FileNotFoundError,
+            match="No saved model found",
+        ),
     ):
         NFLModelArtifactService.load(
             model_type="random_forest",

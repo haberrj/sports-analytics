@@ -34,7 +34,7 @@ class NFLModelArtifactService:
             target=target,
             through_season=through_season,
             parameters=parameters,
-            trained_at=datetime.now(timezone.utc),
+            trained_at=datetime.now(timezone.utc),  # noqa: UP017
         )
 
         model_directory = NFLModelArtifactService.MODEL_DIRECTORY / target
