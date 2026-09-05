@@ -1,3 +1,6 @@
+import pickle
+from pathlib import Path
+
 from games.models import Game, Season
 from predictions.base import TrainingDataService
 from stats.models import NFLTeamProfile
@@ -5,6 +8,8 @@ from teams.models import Team
 
 
 class NFLTrainingDataService(TrainingDataService[NFLTeamProfile, Game, Team]):
+    CACHE_DIRECTORY = Path(__file__).resolve().parents[3] / "data" / "cache"
+
     @staticmethod
     def get_profile_before_game(team: Team, game: Game) -> NFLTeamProfile | None:
         current_season_profile = (
@@ -41,6 +46,59 @@ class NFLTrainingDataService(TrainingDataService[NFLTeamProfile, Game, Team]):
 
     @staticmethod
     def build_training_row(game: Game) -> dict | None:
+        row = NFLTrainingDataService.build_feature_row(game)
+
+        if row is None:
+            return None
+
+        if game.home_score is None or game.away_score is None:
+            return None
+
+        row.update(
+            {
+                "home_score": game.home_score,
+                "away_score": game.away_score,
+                "home_win": game.home_score > game.away_score,
+                "total_game_points": (game.home_score + game.away_score),
+                "score_differential": (game.home_score - game.away_score),
+            }
+        )
+        return row
+
+    @staticmethod
+    def build_dataset(season: Season | None = None, force_rebuild: bool = False) -> list[dict]:
+        season_name = season.name if season is not None else "all"
+        cache_path = NFLTrainingDataService.CACHE_DIRECTORY / f"nfl_training_dataset_{season_name}.pkl"
+        if cache_path.exists() and not force_rebuild:
+            with cache_path.open("rb") as file:
+                return pickle.load(file)
+
+        games = Game.objects.filter(
+            season__league__abbreviation="NFL", home_score__isnull=False, away_score__isnull=False
+        )
+
+        if season is not None:
+            games = games.filter(season=season)
+
+        games = games.select_related("season", "week", "home_team", "away_team").order_by(
+            "season__start_date", "week__number"
+        )
+
+        rows = []
+        for game in games:
+            row = NFLTrainingDataService.build_training_row(game)
+            if row is None:
+                continue
+            rows.append(row)
+
+        NFLTrainingDataService.CACHE_DIRECTORY.mkdir(parents=True, exist_ok=True)
+        with cache_path.open("wb") as file:
+            pickle.dump(rows, file)
+
+        return rows
+
+    @staticmethod
+    def build_feature_row(game: Game) -> dict | None:
         home_profile = NFLTrainingDataService.get_profile_before_game(team=game.home_team, game=game)
 
         away_profile = NFLTrainingDataService.get_profile_before_game(team=game.away_team, game=game)
@@ -48,18 +106,13 @@ class NFLTrainingDataService(TrainingDataService[NFLTeamProfile, Game, Team]):
         if home_profile is None or away_profile is None:
             return None
 
-        if game.home_score is None or game.away_score is None:
-            return None
-
-        row = {
+        return {
             # Metadata
             "game_id": game.external_id,
             "season": int(game.season.name),
             "week": game.week.number,
             "home_team": game.home_team.abbreviation,
             "away_team": game.away_team.abbreviation,
-            "home_score": game.home_score,
-            "away_score": game.away_score,
             # Game context
             "neutral_site": game.neutral_site,
             # Home absolute metrics
@@ -106,10 +159,6 @@ class NFLTrainingDataService(TrainingDataService[NFLTeamProfile, Game, Team]):
             "away_rush_defense_yards_per_game_strength": (away_profile.rush_defense_yards_per_game_strength),
             "away_pass_offense_epa_per_game_strength": (away_profile.pass_offense_epa_per_game_strength),
             "away_rush_offense_epa_per_game_strength": (away_profile.rush_offense_epa_per_game_strength),
-            # Targets
-            "home_win": game.home_score > game.away_score,
-            "total_game_points": game.home_score + game.away_score,
-            "score_differential": game.home_score - game.away_score,
             # Home expanded metrics
             "home_points_for_per_game": home_profile.points_for_per_game,
             "home_points_allowed_per_game": home_profile.points_allowed_per_game,
@@ -168,22 +217,3 @@ class NFLTrainingDataService(TrainingDataService[NFLTeamProfile, Game, Team]):
             "away_field_goals_made_per_game": away_profile.field_goals_made_per_game,
             "away_field_goal_percentage": away_profile.field_goal_percentage,
         }
-        return row
-
-    @staticmethod
-    def build_dataset(season: Season | None = None) -> list[dict]:
-        games = Game.objects.filter(
-            season__league__abbreviation="NFL", home_score__isnull=False, away_score__isnull=False
-        )
-        if season is not None:
-            games = games.filter(season=season)
-        games = games.select_related("season", "week", "home_team", "away_team").order_by(
-            "season__start_date", "week__number"
-        )
-        rows = []
-        for game in games:
-            row = NFLTrainingDataService.build_training_row(game)
-            if row is None:
-                continue
-            rows.append(row)
-        return rows

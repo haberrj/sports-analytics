@@ -222,3 +222,6 @@ __marimo__/
 .coverage
 coverage.xml
 htmlcov/
+
+# Cache for ML training
+data
