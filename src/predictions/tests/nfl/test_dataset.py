@@ -813,12 +813,11 @@ def test_build_dataset_uses_cache(tmp_path):
         NFLTrainingDataService,
         "CACHE_DIRECTORY",
         tmp_path,
-    ):
-        with patch.object(
-            NFLTrainingDataService,
-            "build_training_row",
-        ) as mock_build_training_row:
-            rows = NFLTrainingDataService.build_dataset()
+    ), patch.object(
+        NFLTrainingDataService,
+        "build_training_row",
+    ) as mock_build_training_row:
+        rows = NFLTrainingDataService.build_dataset()
 
     assert rows == cached_rows
     mock_build_training_row.assert_not_called()
