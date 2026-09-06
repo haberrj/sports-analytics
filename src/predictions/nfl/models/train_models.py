@@ -14,16 +14,9 @@ from predictions.nfl.models.training import NFLTrainingService  # noqa: E402
 
 
 def main():
-    rf_parameters = {
-        "max_depth": 6,
-        "min_samples_leaf": 4,
-        "n_estimators": 60,
-        "max_features": 0.25
-    }
+    rf_parameters = {"max_depth": 6, "min_samples_leaf": 4, "n_estimators": 60, "max_features": 0.25}
 
-    logistic_parameters = {
-        "max_iterations": 1000
-    }
+    logistic_parameters = {"max_iterations": 1000}
 
     print("Training RF...")
 
@@ -49,6 +42,7 @@ def main():
     )
 
     print("Logistic Saved")
+
 
 if __name__ == "__main__":
     main()

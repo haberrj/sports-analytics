@@ -1,26 +1,26 @@
 from typing import Any
 
-from xgboost import XGBClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
+from xgboost import XGBClassifier
 
 from predictions.nfl.models.base import ClassificationModel
 
 
 class NFLXGBoostModel(ClassificationModel):
     def __init__(
-            self,
-            n_estimators: int,
-            max_depth: int,
-            learning_rate: float,
-            min_child_weight: float,
-            subsample: float,
-            colsample_bytree: float,
-            reg_alpha: float,
-            reg_lambda: float,
-            random_state: int = 42,
-            n_jobs: int = -1
-        ) -> None:
+        self,
+        n_estimators: int,
+        max_depth: int,
+        learning_rate: float,
+        min_child_weight: float,
+        subsample: float,
+        colsample_bytree: float,
+        reg_alpha: float,
+        reg_lambda: float,
+        random_state: int = 42,
+        n_jobs: int = -1,
+    ) -> None:
         super().__init__()
         self.model = Pipeline(
             [
