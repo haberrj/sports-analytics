@@ -26,7 +26,7 @@ pytest_test(
     srcs = ["test_management_command_ingest_nfl.py"],
     imports = ["../../.."],
     deps = [
-        "//src/ingestion/management/commands:commands",
+        "//src/ingestion/management/commands",  # keep
         "@pip//django",
         "@pip//pytest",
     ],

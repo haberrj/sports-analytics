@@ -1,6 +1,7 @@
+load("@rules_python//python:defs.bzl", "py_binary", "py_library")
+
 # gazelle:python_root
 load("//:pytest.bzl", "pytest_test")
-load("@rules_python//python:defs.bzl", "py_binary", "py_library")
 
 exports_files(
     ["pytest_main.py"],
