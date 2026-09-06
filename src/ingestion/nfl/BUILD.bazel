@@ -1,0 +1,25 @@
+load("@rules_python//python:defs.bzl", "py_library")
+
+py_library(
+    name = "nfl",
+    srcs = [
+        "__init__.py",
+        "base.py",
+        "games.py",
+        "service.py",
+        "team_stats.py",
+        "teams.py",
+    ],
+    imports = ["../.."],
+    visibility = ["//src:__subpackages__"],
+    deps = [
+        "//src/games",
+        "//src/ingestion",
+        "//src/stats",
+        "//src/stats/nfl",
+        "//src/teams",
+        "@pip//django",
+        "@pip//nflreadpy",
+        "@pip//polars",
+    ],
+)

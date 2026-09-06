@@ -1,0 +1,60 @@
+# GENERATED FILE - DO NOT EDIT!
+#
+# To update this file, run:
+#   bazel run //:gazelle_python_manifest.update
+
+---
+manifest:
+  modules_mapping:
+    alembic: alembic
+    annotated_types: annotated_types
+    asgiref: asgiref
+    certifi: certifi
+    charset_normalizer: charset_normalizer
+    colorlog: colorlog
+    coverage: coverage
+    dateutil: python_dateutil
+    django: django
+    dotenv: python_dotenv
+    greenlet: greenlet
+    idna: idna
+    iniconfig: iniconfig
+    joblib: joblib
+    mako: mako
+    markupsafe: markupsafe
+    narwhals: narwhals
+    nflreadpy: nflreadpy
+    numpy: numpy
+    optuna: optuna
+    packaging: packaging
+    pandas: pandas
+    platformdirs: platformdirs
+    pluggy: pluggy
+    polars: polars
+    psycopg: psycopg
+    psycopg_binary: psycopg_binary
+    py: pytest
+    pydantic: pydantic
+    pydantic_core: pydantic_core
+    pydantic_settings: pydantic_settings
+    pygments: pygments
+    pytest: pytest
+    pytest_cov: pytest_cov
+    pytest_django: pytest_django
+    requests: requests
+    ruff: ruff
+    scipy: scipy
+    six: six
+    sklearn: scikit_learn
+    sqlalchemy: sqlalchemy
+    sqlparse: sqlparse
+    threadpoolctl: threadpoolctl
+    tqdm: tqdm
+    typing_extensions: typing_extensions
+    typing_inspection: typing_inspection
+    urllib3: urllib3
+    xgboost: xgboost
+    yaml: pyyaml
+  pip_repository:
+    name: pip
+integrity: be402e0b6bb17ae1f1bde0dbff98dfa3c927acb036cecda961417ae749294c7d

@@ -1,0 +1,16 @@
+load("@rules_python//python:defs.bzl", "py_library")
+
+py_library(
+    name = "migrations",
+    srcs = [
+        "0001_initial.py",
+        "0002_initial.py",
+        "0003_game_phase_game_series_game_number.py",
+        "0004_game_last_synced_at.py",
+        "0005_alter_game_start_time.py",
+        "__init__.py",
+    ],
+    imports = ["../.."],
+    visibility = ["//src:__subpackages__"],
+    deps = ["@pip//django"],
+)

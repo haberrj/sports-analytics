@@ -225,3 +225,6 @@ htmlcov/
 
 # Cache for ML training
 data
+
+# Bazel
+bazel-*
