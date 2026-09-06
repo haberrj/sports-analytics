@@ -50,6 +50,11 @@ python_files = [
     "test_*.py",
     "*_test.py",
 ]
+norecursedirs = [
+    "bazel-*",
+    ".git",
+    ".venv",
+]
 
 [tool.coverage.run]
 source = ["src"]
