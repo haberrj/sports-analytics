@@ -12,7 +12,19 @@ py_binary(
     name = "manage",
     srcs = ["manage.py"],
     visibility = ["//src:__subpackages__"],
-    deps = ["@pip//django"],
+    deps = [
+        "//src/betting",  # keep
+        "//src/config",  # keep
+        "//src/fantasy",  # keep
+        "//src/games",  # keep
+        "//src/ingestion",  # keep
+        "//src/players",  # keep
+        "//src/predictions",  # keep
+        "//src/stats",  # keep
+        "//src/teams",  # keep
+        "@pip//django",
+        "@pip//psycopg",  # keep
+    ],
 )
 
 py_library(

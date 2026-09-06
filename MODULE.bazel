@@ -20,6 +20,7 @@ python = use_extension(
     "python",
 )
 python.toolchain(
+    configure_coverage_tool = True,
     python_version = "3.12",
 )
 use_repo(

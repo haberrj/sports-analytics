@@ -10,17 +10,16 @@ py_binary(
         ":random_forest",
         ":training",
         ":xgboost",
-        "//src/config",  # keep
         "//src/betting",  # keep
+        "//src/config",  # keep
         "//src/fantasy",  # keep
         "//src/games",  # keep
         "//src/ingestion",  # keep
         "//src/players",  # keep
-        "//src/predictions",  # keep 
+        "//src/predictions",  # keep
         "//src/stats",  # keep
         "//src/teams",  # keep
         "@pip//django",
-        "@pip//psycopg",
     ],
 )
 
