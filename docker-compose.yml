@@ -9,6 +9,8 @@ services:
     volumes:
       - ./src:/app/src
 
+    # Temporary while we verify the Cloudflare tunnel.
+    # We can remove this once Cloudflare is working.
     ports:
       - "8001:8000"
 
@@ -18,6 +20,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+
+    restart: unless-stopped
 
   db:
     image: postgres:17
@@ -33,6 +37,23 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+    restart: unless-stopped
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+
+    command:
+      - tunnel
+      - --no-autoupdate
+      - run
+      - --token
+      - ${CLOUDFLARE_TUNNEL_TOKEN}
+
+    depends_on:
+      - web
+
+    restart: unless-stopped
 
 volumes:
   postgres_data:
