@@ -1,0 +1,71 @@
+load("@rules_python//python:defs.bzl", "py_library")
+load("//:pytest.bzl", "pytest_test")
+
+py_library(
+    name = "nfl",
+    srcs = ["__init__.py"],
+    imports = ["../../.."],
+    visibility = ["//src:__subpackages__"],
+)
+
+pytest_test(
+    name = "test_games",
+    srcs = ["test_games.py"],
+    imports = ["../../.."],
+    deps = [
+        "//src/games",
+        "//src/ingestion/nfl",
+        "//src/teams",
+        "@pip//polars",
+        "@pip//pytest",
+    ],
+)
+
+pytest_test(
+    name = "test_management_command_ingest_nfl",
+    srcs = ["test_management_command_ingest_nfl.py"],
+    imports = ["../../.."],
+    deps = [
+        "//src/ingestion/management/commands:commands",
+        "@pip//django",
+        "@pip//pytest",
+    ],
+)
+
+pytest_test(
+    name = "test_service",
+    srcs = ["test_service.py"],
+    imports = ["../../.."],
+    deps = [
+        "//src/ingestion",
+        "//src/ingestion/nfl",
+    ],
+)
+
+pytest_test(
+    name = "test_team_stats",
+    srcs = ["test_team_stats.py"],
+    imports = ["../../.."],
+    deps = [
+        "//src/games",
+        "//src/ingestion",
+        "//src/ingestion/nfl",
+        "//src/stats",
+        "//src/teams",
+        "@pip//django",
+        "@pip//polars",
+        "@pip//pytest",
+    ],
+)
+
+pytest_test(
+    name = "test_teams",
+    srcs = ["test_teams.py"],
+    imports = ["../../.."],
+    deps = [
+        "//src/ingestion/nfl",
+        "//src/teams",
+        "@pip//polars",
+        "@pip//pytest",
+    ],
+)

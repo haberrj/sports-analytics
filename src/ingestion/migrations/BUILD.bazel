@@ -1,0 +1,13 @@
+load("@rules_python//python:defs.bzl", "py_library")
+
+py_library(
+    name = "migrations",
+    srcs = [
+        "0001_initial.py",
+        "0002_alter_ingestionstate_dataset.py",
+        "__init__.py",
+    ],
+    imports = ["../.."],
+    visibility = ["//src:__subpackages__"],
+    deps = ["@pip//django"],
+)

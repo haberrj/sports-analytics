@@ -1,0 +1,43 @@
+# gazelle:python_generation_mode file
+
+load("@rules_python//python:defs.bzl", "py_library")
+
+py_library(
+    name = "dataset",
+    srcs = ["dataset.py"],
+    imports = ["../.."],
+    visibility = ["//src:__subpackages__"],
+    deps = [
+        "//src/games",
+        "//src/predictions",
+        "//src/stats",
+        "//src/teams",
+    ],
+)
+
+py_library(
+    name = "features",
+    srcs = ["features.py"],
+    imports = ["../.."],
+    visibility = ["//src:__subpackages__"],
+)
+
+py_library(
+    name = "prediction",
+    srcs = ["prediction.py"],
+    imports = ["../.."],
+    visibility = ["//src:__subpackages__"],
+    deps = [
+        ":dataset",
+        "//src/games",
+        "//src/predictions/nfl/models:artifacts",
+        "//src/predictions/nfl/models:base",
+    ],
+)
+
+py_library(
+    name = "preprocessing",
+    srcs = ["preprocessing.py"],
+    imports = ["../.."],
+    visibility = ["//src:__subpackages__"],
+)

@@ -1,0 +1,22 @@
+load("@rules_python//python:defs.bzl", "py_library")
+load("//:pytest.bzl", "pytest_test")
+
+py_library(
+    name = "tests",
+    srcs = ["__init__.py"],
+    imports = ["../.."],
+    visibility = ["//src:__subpackages__"],
+)
+
+pytest_test(
+    name = "test_models",
+    srcs = ["test_models.py"],
+    imports = ["../.."],
+    deps = [
+        "//src/games",
+        "//src/players",
+        "//src/teams",
+        "@pip//django",
+        "@pip//pytest",
+    ],
+)

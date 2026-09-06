@@ -1,0 +1,22 @@
+load("@rules_python//python:defs.bzl", "py_library")
+load("//:pytest.bzl", "pytest_test")
+
+py_library(
+    name = "nfl",
+    srcs = ["__init__.py"],
+    imports = ["../../.."],
+    visibility = ["//src:__subpackages__"],
+)
+
+pytest_test(
+    name = "test_derived",
+    srcs = ["test_derived.py"],
+    imports = ["../../.."],
+    deps = [
+        "//src/games",
+        "//src/stats",
+        "//src/stats/nfl",
+        "//src/teams",
+        "@pip//pytest",
+    ],
+)

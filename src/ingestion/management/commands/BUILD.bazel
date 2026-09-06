@@ -1,0 +1,16 @@
+load("@rules_python//python:defs.bzl", "py_library")
+
+py_library(
+    name = "commands",
+    srcs = [
+        "__init__.py",
+        "ingest_nfl.py",
+    ],
+    imports = ["../../.."],
+    visibility = ["//src:__subpackages__"],
+    deps = [
+        "//src/ingestion",
+        "//src/ingestion/nfl",
+        "@pip//django",
+    ],
+)

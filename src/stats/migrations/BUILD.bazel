@@ -1,0 +1,20 @@
+load("@rules_python//python:defs.bzl", "py_library")
+
+py_library(
+    name = "migrations",
+    srcs = [
+        "0001_initial.py",
+        "0002_nflteamgamestats_defensive_qb_hits_and_more.py",
+        "0003_alter_nflteamgamestats_defensive_passing_yards_allowed_and_more.py",
+        "0004_nflteamprofile.py",
+        "0005_nflteamgamestats_opponent_passing_attempts_and_more.py",
+        "0006_nflteamprofile_pass_defense_yards_per_attempt_and_more.py",
+        "0007_rename_pass_defense_strength_nflteamprofile_pass_defense_yards_per_attempt_strength_and_more.py",
+        "0008_nflteamprofile_defensive_turnovers_forced_per_game_and_more.py",
+        "0009_nflteamprofile_defensive_qb_hits_per_game_and_more.py",
+        "__init__.py",
+    ],
+    imports = ["../.."],
+    visibility = ["//src:__subpackages__"],
+    deps = ["@pip//django"],
+)

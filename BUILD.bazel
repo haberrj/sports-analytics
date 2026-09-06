@@ -1,0 +1,44 @@
+# gazelle:exclude .venv
+# gazelle:exclude .git
+# gazelle:exclude data
+# gazelle:map_kind py_test pytest_test //:pytest.bzl
+
+load(
+    "@gazelle//:def.bzl",
+    "DEFAULT_LANGUAGES",
+    "gazelle",
+    "gazelle_binary",
+)
+load("@pip//:requirements.bzl", "all_whl_requirements")
+load(
+    "@rules_python_gazelle_plugin//manifest:defs.bzl",
+    "gazelle_python_manifest",
+)
+load(
+    "@rules_python_gazelle_plugin//modules_mapping:def.bzl",
+    "modules_mapping",
+)
+
+modules_mapping(
+    name = "modules_map",
+    wheels = all_whl_requirements,
+)
+
+gazelle_python_manifest(
+    name = "gazelle_python_manifest",
+    modules_mapping = ":modules_map",
+    pip_repository_name = "pip",
+    requirements = "//:requirements_lock.txt",
+)
+
+gazelle_binary(
+    name = "gazelle_bin",
+    languages = DEFAULT_LANGUAGES + [
+        "@rules_python_gazelle_plugin//python",
+    ],
+)
+
+gazelle(
+    name = "gazelle",
+    gazelle = ":gazelle_bin",
+)
