@@ -70,14 +70,25 @@ class NFLTrainingService:
         parameters: dict[str, Any],
         target: str,
         through_season: int,
+        through_week: int | None = None,
         model_parameters: dict[str, Any] | None = None,
     ) -> ClassificationModel:
         dataset = NFLTrainingDataService.build_dataset()
 
-        training_rows = [row for row in dataset if row["season"] <= through_season]
+        if through_week is None:
+            training_rows = [row for row in dataset if row["season"] <= through_season]
+        else:
+            training_rows = [
+                row
+                for row in dataset
+                if (row["season"] < through_season or (row["season"] == through_season and row["week"] <= through_week))
+            ]
 
         if not training_rows:
-            raise ValueError(f"No training data available through {through_season} season.")
+            raise ValueError(
+                "No training data available through "
+                f"{through_season}" + (f" week {through_week}." if through_week is not None else ".")
+            )
 
         features, targets = NFLPreprocessingService.split_features_target(
             rows=training_rows,
@@ -91,10 +102,7 @@ class NFLTrainingService:
             **model_parameters,
         )
 
-        model.fit(
-            features,
-            targets,
-        )
+        model.fit(features, targets)
 
         return model
 
@@ -105,6 +113,7 @@ class NFLTrainingService:
         parameters: dict[str, Any],
         target: str,
         through_season: int,
+        through_week: int | None = None,
         model_parameters: dict[str, Any] | None = None,
     ) -> ClassificationModel:
         model = NFLTrainingService.train_model(
@@ -112,6 +121,7 @@ class NFLTrainingService:
             parameters=parameters,
             target=target,
             through_season=through_season,
+            through_week=through_week,
             model_parameters=model_parameters,
         )
 
