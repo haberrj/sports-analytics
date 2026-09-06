@@ -75,6 +75,9 @@ jobs:
         run: |
           set -o pipefail
           uv run pytest \
+            --vv \
+            --durations=20 \
+            --durations-min=1.0 \
             --cov=src \
             --cov-report=term-missing \
             --cov-report=xml \
