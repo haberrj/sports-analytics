@@ -231,6 +231,103 @@ def test_train_model(
     assert result == mock_model
 
 
+@patch("predictions.nfl.models.training.NFLPreprocessingService.split_features_target")
+@patch("predictions.nfl.models.training.NFLTrainingDataService.build_dataset")
+def test_train_model_through_week(
+    mock_build_dataset,
+    mock_split_features_target,
+):
+    dataset = [
+        {
+            "season": 2024,
+            "week": 18,
+            "home_win": 1,
+        },
+        {
+            "season": 2025,
+            "week": 1,
+            "home_win": 0,
+        },
+        {
+            "season": 2025,
+            "week": 2,
+            "home_win": 1,
+        },
+        {
+            "season": 2025,
+            "week": 3,
+            "home_win": 0,
+        },
+    ]
+
+    training_features = [
+        {"feature": 1},
+        {"feature": 2},
+        {"feature": 3},
+    ]
+
+    training_targets = [
+        1,
+        0,
+        1,
+    ]
+
+    mock_build_dataset.return_value = dataset
+
+    mock_split_features_target.return_value = (
+        training_features,
+        training_targets,
+    )
+
+    mock_model = MagicMock(
+        spec=ClassificationModel,
+    )
+
+    mock_model_class = MagicMock(
+        return_value=mock_model,
+    )
+
+    result = NFLTrainingService.train_model(
+        model_class=mock_model_class,
+        parameters={},
+        target="home_win",
+        through_season=2025,
+        through_week=2,
+    )
+
+    mock_build_dataset.assert_called_once_with()
+
+    mock_split_features_target.assert_called_once_with(
+        rows=[
+            {
+                "season": 2024,
+                "week": 18,
+                "home_win": 1,
+            },
+            {
+                "season": 2025,
+                "week": 1,
+                "home_win": 0,
+            },
+            {
+                "season": 2025,
+                "week": 2,
+                "home_win": 1,
+            },
+        ],
+        target="home_win",
+    )
+
+    mock_model_class.assert_called_once_with()
+
+    mock_model.fit.assert_called_once_with(
+        training_features,
+        training_targets,
+    )
+
+    assert result == mock_model
+
+
 @patch("predictions.nfl.models.training.NFLTrainingDataService.build_dataset")
 def test_train_model_raises_when_no_training_data(
     mock_build_dataset,
@@ -241,7 +338,7 @@ def test_train_model_raises_when_no_training_data(
 
     with pytest.raises(
         ValueError,
-        match=("No training data available through 2024 season."),
+        match="No training data available through 2024.",
     ):
         NFLTrainingService.train_model(
             model_class=NFLRandomForestModel,
@@ -278,7 +375,8 @@ def test_train_and_save_model(
         model_type="random_forest",
         parameters=parameters,
         target="home_win",
-        through_season=2024,
+        through_season=2025,
+        through_week=8,
         model_parameters={
             "n_jobs": 4,
         },
@@ -288,7 +386,8 @@ def test_train_and_save_model(
         model_class=NFLRandomForestModel,
         parameters=parameters,
         target="home_win",
-        through_season=2024,
+        through_season=2025,
+        through_week=8,
         model_parameters={
             "n_jobs": 4,
         },
@@ -298,7 +397,7 @@ def test_train_and_save_model(
         model=mock_model,
         model_type="random_forest",
         target="home_win",
-        through_season=2024,
+        through_season=2025,
         parameters=parameters,
     )
 
