@@ -1,0 +1,107 @@
+load("@rules_python//python:defs.bzl", "py_binary", "py_library")
+
+py_binary(
+    name = "train_models",
+    srcs = ["train_models.py"],
+    imports = ["../../.."],
+    visibility = ["//src:__subpackages__"],
+    deps = [
+        ":logistic",
+        ":random_forest",
+        ":training",
+        ":xgboost",
+        "//src/betting",  # keep
+        "//src/config",  # keep
+        "//src/fantasy",  # keep
+        "//src/games",  # keep
+        "//src/ingestion",  # keep
+        "//src/players",  # keep
+        "//src/predictions",  # keep
+        "//src/stats",  # keep
+        "//src/teams",  # keep
+        "@pip//django",
+    ],
+)
+
+py_library(
+    name = "artifacts",
+    srcs = ["artifacts.py"],
+    imports = ["../../.."],
+    visibility = ["//src:__subpackages__"],
+    deps = [":base"],
+)
+
+py_library(
+    name = "base",
+    srcs = ["base.py"],
+    imports = ["../../.."],
+    visibility = ["//src:__subpackages__"],
+    deps = ["@pip//scikit_learn"],
+)
+
+py_library(
+    name = "gradiant_boosting",
+    srcs = ["gradiant_boosting.py"],
+    imports = ["../../.."],
+    visibility = ["//src:__subpackages__"],
+)
+
+py_library(
+    name = "logistic",
+    srcs = ["logistic.py"],
+    imports = ["../../.."],
+    visibility = ["//src:__subpackages__"],
+    deps = [
+        ":base",
+        "@pip//scikit_learn",
+    ],
+)
+
+py_library(
+    name = "optimizer",
+    srcs = ["optimizer.py"],
+    imports = ["../../.."],
+    visibility = ["//src:__subpackages__"],
+    deps = [
+        "//src/predictions/nfl:preprocessing",
+        "@pip//optuna",
+    ],
+)
+
+py_library(
+    name = "random_forest",
+    srcs = ["random_forest.py"],
+    imports = ["../../.."],
+    visibility = ["//src:__subpackages__"],
+    deps = [
+        ":base",
+        "@pip//optuna",
+        "@pip//scikit_learn",
+    ],
+)
+
+py_library(
+    name = "training",
+    srcs = ["training.py"],
+    imports = ["../../.."],
+    visibility = ["//src:__subpackages__"],
+    deps = [
+        ":artifacts",
+        ":base",
+        ":optimizer",
+        "//src/predictions/nfl:dataset",
+        "//src/predictions/nfl:preprocessing",
+    ],
+)
+
+py_library(
+    name = "xgboost",
+    srcs = ["xgboost.py"],
+    imports = ["../../.."],
+    visibility = ["//src:__subpackages__"],
+    deps = [
+        ":base",
+        "@pip//scikit_learn",
+        "@pip//xgboost",
+    ],
+)

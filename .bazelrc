@@ -1,0 +1,4 @@
+common --incompatible_default_to_explicit_init_py
+
+test --jobs=1
+test --test_output=errors

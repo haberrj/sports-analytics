@@ -1,0 +1,109 @@
+load("@rules_python//python:defs.bzl", "py_library")
+load("//:pytest.bzl", "pytest_test")
+
+py_library(
+    name = "nfl",
+    srcs = ["__init__.py"],
+    imports = ["../../.."],
+    visibility = ["//src:__subpackages__"],
+)
+
+pytest_test(
+    name = "test_artifact",
+    srcs = ["test_artifact.py"],
+    imports = ["../../.."],
+    deps = [
+        "//src/predictions/nfl/models:artifacts",
+        "//src/predictions/nfl/models:random_forest",
+        "@pip//pytest",
+    ],
+)
+
+pytest_test(
+    name = "test_dataset",
+    srcs = ["test_dataset.py"],
+    imports = ["../../.."],
+    deps = [
+        "//src/games",
+        "//src/predictions/nfl:dataset",
+        "//src/stats",
+        "//src/teams",
+        "@pip//pytest",
+    ],
+)
+
+pytest_test(
+    name = "test_logistic",
+    srcs = ["test_logistic.py"],
+    imports = ["../../.."],
+    deps = [
+        "//src/predictions/nfl/models:logistic",
+        "@pip//pytest",
+        "@pip//scikit_learn",
+    ],
+)
+
+pytest_test(
+    name = "test_optimizer",
+    srcs = ["test_optimizer.py"],
+    imports = ["../../.."],
+    deps = [
+        "//src/predictions/nfl/models:optimizer",
+        "@pip//optuna",
+        "@pip//pytest",
+    ],
+)
+
+pytest_test(
+    name = "test_prediction",
+    srcs = ["test_prediction.py"],
+    imports = ["../../.."],
+    deps = [
+        "//src/predictions/nfl:prediction",
+        "//src/predictions/nfl/models:artifacts",
+    ],
+)
+
+pytest_test(
+    name = "test_preprocessing",
+    srcs = ["test_preprocessing.py"],
+    imports = ["../../.."],
+    deps = [
+        "//src/predictions/nfl:preprocessing",
+        "@pip//pytest",
+    ],
+)
+
+pytest_test(
+    name = "test_random_forest",
+    srcs = ["test_random_forest.py"],
+    imports = ["../../.."],
+    deps = [
+        "//src/predictions/nfl/models:random_forest",
+        "@pip//scikit_learn",
+    ],
+)
+
+pytest_test(
+    name = "test_training",
+    srcs = ["test_training.py"],
+    imports = ["../../.."],
+    deps = [
+        "//src/predictions/nfl/models:base",
+        "//src/predictions/nfl/models:optimizer",
+        "//src/predictions/nfl/models:random_forest",
+        "//src/predictions/nfl/models:training",
+        "@pip//pytest",
+    ],
+)
+
+pytest_test(
+    name = "test_xgboost",
+    srcs = ["test_xgboost.py"],
+    imports = ["../../.."],
+    deps = [
+        "//src/predictions/nfl/models:xgboost",
+        "@pip//scikit_learn",
+        "@pip//xgboost",
+    ],
+)

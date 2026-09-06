@@ -1,0 +1,107 @@
+name: Coverage
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  coverage:
+    strategy:
+      matrix:
+        branch:
+          - develop
+          - main
+
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: nfl_analysis
+          POSTGRES_USER: nfl
+          POSTGRES_PASSWORD: nfl
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U nfl -d nfl_analysis"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      POSTGRES_DB: nfl_analysis
+      POSTGRES_USER: nfl
+      POSTGRES_PASSWORD: nfl
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
+      DJANGO_DEBUG: "false"
+
+    steps:
+      - name: Checkout ${{ matrix.branch }}
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.branch }}
+
+      - name: Setup Bazel
+        uses: bazel-contrib/setup-bazel@0.19.0
+        with:
+          bazelisk-cache: true
+          repository-cache: true
+          disk-cache: ${{ github.workflow }}-${{ matrix.branch }}
+
+      - name: Run full coverage
+        run: |
+          bazel coverage //... \
+            --combined_report=lcov \
+            --nocache_test_results
+
+      - name: Calculate coverage
+        run: |
+          COVERAGE=$(awk -F: '
+            /^LF:/ { total += $2 }
+            /^LH:/ { hit += $2 }
+            END {
+              if (total == 0) {
+                print "0.00"
+              } else {
+                printf "%.2f", (hit / total) * 100
+              }
+            }
+          ' bazel-out/_coverage/_coverage_report.dat)
+
+          echo "COVERAGE=$COVERAGE" >> "$GITHUB_ENV"
+          echo "Coverage: ${COVERAGE}%"
+
+          awk -v coverage="$COVERAGE" '
+            BEGIN {
+              if (coverage < 80) {
+                printf "Coverage %.2f%% is below required 80%%\n", coverage
+                exit 1
+              }
+            }
+          '
+
+      - name: Add coverage to job summary
+        if: always()
+        run: |
+          {
+            echo "## ${{ matrix.branch }} Coverage"
+            echo
+            echo "**Total coverage: ${COVERAGE:-Unavailable}%**"
+            echo
+            echo "Required coverage: **80%**"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.branch }}
+          path: bazel-out/_coverage/_coverage_report.dat
+          retention-days: 30
