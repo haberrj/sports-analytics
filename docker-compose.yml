@@ -1,5 +1,7 @@
 services:
   web:
+    image: ${WEB_IMAGE:-sports-analytics:local}
+    
     build:
       context: .
       dockerfile: Dockerfile
@@ -37,6 +39,9 @@ services:
 
   cloudflared:
     image: cloudflare/cloudflared:latest
+
+    profiles:
+      - production
 
     command:
       - tunnel

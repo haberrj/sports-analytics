@@ -1,0 +1,4 @@
+services:
+  web:
+    ports:
+      - "8001:8000"
