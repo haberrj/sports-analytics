@@ -1,8 +1,19 @@
 load("@rules_python//python:defs.bzl", "py_library")
+load("//:pytest.bzl", "pytest_test")
 
 py_library(
     name = "tests",
     srcs = ["__init__.py"],
     imports = ["../.."],
     visibility = ["//src:__subpackages__"],
+)
+
+pytest_test(
+    name = "test_evaluation",
+    srcs = ["test_evaluation.py"],
+    imports = ["../.."],
+    deps = [
+        "//src/predictions",
+        "@pip//pytest",
+    ],
 )

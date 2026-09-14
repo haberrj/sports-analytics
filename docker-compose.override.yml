@@ -2,3 +2,10 @@ services:
   web:
     ports:
       - "8001:8000"
+
+    volumes:
+      - ./data/models:/app/data/model
+  
+  db:
+    ports:
+      - "5432:5432"

@@ -1,0 +1,22 @@
+load("@rules_python//python:defs.bzl", "py_library")
+
+py_library(
+    name = "commands",
+    srcs = [
+        "__init__.py",
+        "compare_nfl_models.py",
+        "optimize_nfl_models.py",
+        "train_nfl_models.py",
+    ],
+    imports = ["../../.."],
+    visibility = ["//src:__subpackages__"],
+    deps = [
+        "//src/predictions/nfl:evaluation",
+        "//src/predictions/nfl/models:logistic",
+        "//src/predictions/nfl/models:parameter_config",
+        "//src/predictions/nfl/models:random_forest",
+        "//src/predictions/nfl/models:training",
+        "//src/predictions/nfl/models:xgboost",
+        "@pip//django",
+    ],
+)

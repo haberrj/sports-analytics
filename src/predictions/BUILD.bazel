@@ -7,6 +7,7 @@ py_library(
         "admin.py",
         "apps.py",
         "base.py",
+        "evaluation.py",
         "models.py",
         "tests.py",
         "views.py",
