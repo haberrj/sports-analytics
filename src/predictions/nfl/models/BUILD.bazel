@@ -105,3 +105,14 @@ py_library(
         "@pip//xgboost",
     ],
 )
+
+py_binary(
+    name = "compare_models",
+    srcs = ["compare_models.py"],
+    imports = ["../../.."],
+    visibility = ["//src:__subpackages__"],
+    deps = [
+        "//src/predictions/nfl:evaluation",
+        "@pip//django",
+    ],
+)
