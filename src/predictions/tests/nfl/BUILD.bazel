@@ -107,3 +107,14 @@ pytest_test(
         "@pip//xgboost",
     ],
 )
+
+pytest_test(
+    name = "test_evaluation",
+    srcs = ["test_evaluation.py"],
+    imports = ["../../.."],
+    deps = [
+        "//src/predictions",
+        "//src/predictions/nfl:evaluation",
+        "@pip//pytest",
+    ],
+)

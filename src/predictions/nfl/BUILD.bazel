@@ -41,3 +41,16 @@ py_library(
     imports = ["../.."],
     visibility = ["//src:__subpackages__"],
 )
+
+py_library(
+    name = "evaluation",
+    srcs = ["evaluation.py"],
+    imports = ["../.."],
+    visibility = ["//src:__subpackages__"],
+    deps = [
+        ":dataset",
+        ":preprocessing",
+        "//src/predictions",
+        "//src/predictions/nfl/models:base",
+    ],
+)
