@@ -9,11 +9,6 @@ services:
     volumes:
       - ./src:/app/src
 
-    # Temporary while we verify the Cloudflare tunnel.
-    # We can remove this once Cloudflare is working.
-    ports:
-      - "8001:8000"
-
     env_file:
       - .env
 
