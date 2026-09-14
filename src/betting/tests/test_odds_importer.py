@@ -72,6 +72,7 @@ def betting_setup():
         "sportsbook_region": sportsbook_region,
     }
 
+
 @pytest.mark.django_db
 def test_imports_moneyline_for_mapped_game():
     league = League.objects.create(
@@ -230,6 +231,7 @@ def test_imports_moneyline_for_mapped_game():
     assert away_odds.external_market_id == "bwin-market-141"
     assert away_odds.external_outcome_id == "bwin-away"
 
+
 @pytest.mark.django_db
 def test_imports_spread_with_opposite_home_and_away_lines():
     league = League.objects.create(
@@ -367,6 +369,7 @@ def test_imports_spread_with_opposite_home_and_away_lines():
 
     assert home.decimal_odds == Decimal("1.9100")
     assert away.decimal_odds == Decimal("1.9100")
+
 
 @pytest.mark.django_db
 def test_imports_total_with_same_line_for_over_and_under():
@@ -506,62 +509,6 @@ def test_imports_total_with_same_line_for_over_and_under():
     assert over.decimal_odds == Decimal("1.9500")
     assert under.decimal_odds == Decimal("1.8700")
 
-@pytest.fixture
-def betting_setup():
-    league = League.objects.create(
-        name="National Football League",
-        abbreviation="NFL",
-    )
-
-    season = Season.objects.create(
-        league=league,
-        name="2026",
-        start_date="2026-09-01",
-        end_date="2027-02-28",
-    )
-
-    home_team = Team.objects.create(
-        external_id="home-team",
-        slug="home-team",
-        name="Home Team",
-        abbreviation="HOM",
-        city="Home City",
-    )
-
-    away_team = Team.objects.create(
-        external_id="away-team",
-        slug="away-team",
-        name="Away Team",
-        abbreviation="AWY",
-        city="Away City",
-    )
-
-    game = Game.objects.create(
-        season=season,
-        home_team=home_team,
-        away_team=away_team,
-    )
-
-    ExternalGameMapping.objects.create(
-        game=game,
-        provider=ExternalGameMapping.Provider.ODDSPAPI,
-        external_fixture_id="fixture-123",
-    )
-
-    sportsbook = Sportsbook.objects.create(
-        name="Bwin",
-        slug="bwin",
-    )
-
-    sportsbook_region = SportsbookRegion.objects.create(
-        sportsbook=sportsbook,
-        country_code="DE",
-    )
-
-    return {
-        "game": game,
-        "sportsbook_region": sportsbook_region,
-    }
 
 @pytest.mark.django_db
 def test_reimporting_same_odds_does_not_create_duplicates(betting_setup):
@@ -640,6 +587,7 @@ def test_reimporting_same_odds_does_not_create_duplicates(betting_setup):
 
     assert OddsSnapshot.objects.count() == 2
 
+
 @pytest.mark.django_db
 @pytest.mark.parametrize(
     ("bookmaker_is_active", "suspended"),
@@ -681,6 +629,7 @@ def test_inactive_or_suspended_bookmaker_is_skipped(
 
     assert SportsbookFixture.objects.count() == 0
     assert OddsSnapshot.objects.count() == 0
+
 
 @pytest.mark.django_db
 def test_inactive_market_is_skipped(betting_setup):
@@ -732,6 +681,7 @@ def test_inactive_market_is_skipped(betting_setup):
 
     assert SportsbookFixture.objects.count() == 1
     assert OddsSnapshot.objects.count() == 0
+
 
 @pytest.mark.django_db
 def test_inactive_outcome_is_skipped(betting_setup):

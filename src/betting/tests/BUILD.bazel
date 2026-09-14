@@ -38,3 +38,39 @@ pytest_test(
         "@pip//requests",
     ],
 )
+
+pytest_test(
+    name = "test_odds_ingestion",
+    srcs = ["test_odds_ingestion.py"],
+    imports = ["../.."],
+    deps = [
+        "//src/betting",
+        "//src/betting/services",
+        "@pip//pytest",
+    ],
+)
+
+pytest_test(
+    name = "test_fixture_matching",
+    srcs = ["test_fixture_matching.py"],
+    imports = ["../.."],
+    deps = [
+        "//src/betting",
+        "//src/betting/services",
+        "//src/games",
+        "//src/teams",
+        "@pip//pytest",
+    ],
+)
+
+pytest_test(
+    name = "test_team_mapping",
+    srcs = ["test_team_mapping.py"],
+    imports = ["../.."],
+    deps = [
+        "//src/betting",
+        "//src/betting/services",
+        "//src/teams",
+        "@pip//pytest",
+    ],
+)

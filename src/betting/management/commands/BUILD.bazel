@@ -1,13 +1,15 @@
 load("@rules_python//python:defs.bzl", "py_library")
 
 py_library(
-    name = "migrations",
+    name = "commands",
     srcs = [
-        "0001_initial.py",
-        "0002_externalteammapping.py",
         "__init__.py",
+        "ingest_odds.py",
     ],
-    imports = ["../.."],
+    imports = ["../../.."],
     visibility = ["//src:__subpackages__"],
-    deps = ["@pip//django"],
+    deps = [
+        "//src/betting/services",
+        "@pip//django",
+    ],
 )

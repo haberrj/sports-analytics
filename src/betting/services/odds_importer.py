@@ -20,14 +20,14 @@ class OddsImporter:
     MARKET_TYPES = {
         "moneyline": OddsSnapshot.MarketType.MONEYLINE,
         "spreads": OddsSnapshot.MarketType.SPREAD,
-        "totals": OddsSnapshot.MarketType.TOTAL
+        "totals": OddsSnapshot.MarketType.TOTAL,
     }
 
     OUTCOME_SIDES = {
         "1": OddsSnapshot.Side.HOME,
         "2": OddsSnapshot.Side.AWAY,
         "over": OddsSnapshot.Side.OVER,
-        "under": OddsSnapshot.Side.UNDER
+        "under": OddsSnapshot.Side.UNDER,
     }
 
     def __init__(self, *, market_catalog: MarketCatalog, sportsbook_region: SportsbookRegion, bookmaker: str) -> None:
@@ -43,10 +43,13 @@ class OddsImporter:
 
         for fixture_payload in payload:
             fixture_id = fixture_payload["fixtureId"]
-            mapping = ExternalGameMapping.objects.filter(
-                provider=ExternalGameMapping.Provider.ODDSPAPI,
-                external_fixture_id=fixture_id
-            ).select_related("game").first()
+            mapping = (
+                ExternalGameMapping.objects.filter(
+                    provider=ExternalGameMapping.Provider.ODDSPAPI, external_fixture_id=fixture_id
+                )
+                .select_related("game")
+                .first()
+            )
 
             if mapping is None:
                 unmatched += 1
@@ -66,8 +69,8 @@ class OddsImporter:
                 sportsbook_region=self.sportsbook_region,
                 defaults={
                     "external_fixture_id": bookmaker_payload.get("bookmakerFixtureId"),
-                    "event_url": bookmaker_payload.get("fixturePath")
-                }
+                    "event_url": bookmaker_payload.get("fixturePath"),
+                },
             )
 
             for market_id, market_payload in bookmaker_payload.get("markets", {}).items():
@@ -94,7 +97,7 @@ class OddsImporter:
             fixtures_matched=matched,
             fixtures_unmatched=unmatched,
             snapshots_created=created,
-            snapshots_existing=existing
+            snapshots_existing=existing,
         )
 
     def _import_market(
@@ -103,7 +106,7 @@ class OddsImporter:
         sportsbook_fixture: SportsbookFixture,
         definition: MarketDefinition,
         market_payload: dict,
-        market_type: str
+        market_type: str,
     ) -> tuple[int, int]:
         created = 0
         existing = 0
@@ -149,8 +152,8 @@ class OddsImporter:
                     "line": line,
                     "decimal_odds": Decimal(str(player_payload["price"])),
                     "american_odds": self._american_odds(player_payload.get("priceAmerican")),
-                    "betslip_url": player_payload.get("betslip")
-                }
+                    "betslip_url": player_payload.get("betslip"),
+                },
             )
 
             if was_created:

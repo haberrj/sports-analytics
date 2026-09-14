@@ -1,6 +1,7 @@
 from django.db import models
 
 from games.models import Game
+from teams.models import Team
 
 
 class Sportsbook(models.Model):
@@ -121,3 +122,34 @@ class OddsSnapshot(models.Model):
     def __str__(self):
         line = f" {self.line}" if self.line is not None else ""
         return f"{self.sportsbook_fixture} {self.market_type} {self.side}{line} @ {self.decimal_odds}"
+
+
+class ExternalTeamMapping(models.Model):
+    class Provider(models.TextChoices):
+        ODDSPAPI = "oddspapi", "OddsPapi"
+
+    team = models.ForeignKey(
+        Team,
+        on_delete=models.CASCADE,
+        related_name="external_mappings",
+    )
+    provider = models.CharField(
+        max_length=50,
+        choices=Provider.choices,
+    )
+    external_team_id = models.CharField(max_length=255)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["provider", "external_team_id"],
+                name="unique_external_team",
+            ),
+            models.UniqueConstraint(
+                fields=["team", "provider"],
+                name="unique_team_provider",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.provider}: {self.external_team_id} -> {self.team}"

@@ -47,3 +47,12 @@ class OddsPapiClient:
                 "bookmaker": bookmaker,
             },
         )
+
+    def get_participants(self, sport_id: int):
+        return self._get(
+            "participants",
+            {
+                "sportId": sport_id,
+                "language": "en",
+            },
+        )
