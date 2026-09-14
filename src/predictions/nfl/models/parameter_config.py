@@ -4,11 +4,7 @@ from typing import Any
 
 
 class NFLModelParameterConfigService:
-    MODEL_DIRECTORY = (
-        Path(__file__).resolve().parents[4]
-        / "data"
-        / "models"
-    )
+    MODEL_DIRECTORY = Path(__file__).resolve().parents[4] / "data" / "models"
 
     @classmethod
     def _config_path(
@@ -16,11 +12,7 @@ class NFLModelParameterConfigService:
         *,
         target: str,
     ) -> Path:
-        return (
-            cls.MODEL_DIRECTORY
-            / target
-            / "parameters.json"
-        )
+        return cls.MODEL_DIRECTORY / target / "parameters.json"
 
     @classmethod
     def load_all(
@@ -52,10 +44,7 @@ class NFLModelParameterConfigService:
         try:
             return config[model_type]
         except KeyError as exc:
-            raise FileNotFoundError(
-                f"No saved parameters found for "
-                f"{model_type} target {target}"
-            ) from exc
+            raise FileNotFoundError(f"No saved parameters found for {model_type} target {target}") from exc
 
     @classmethod
     def save(

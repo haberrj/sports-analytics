@@ -41,19 +41,13 @@ class Command(BaseCommand):
         through_season = options["through_season"]
         through_week = options["through_week"]
 
-        rf_parameters = NFLModelParameterConfigService.load(
-            model_type="random_forest",
-            target=target
-        )
+        rf_parameters = NFLModelParameterConfigService.load(model_type="random_forest", target=target)
 
         logistic_parameters = {
             "max_iterations": 1000,
         }
 
-        xgboost_parameters = NFLModelParameterConfigService.load(
-            model_type="xgboost",
-            target=target
-        )
+        xgboost_parameters = NFLModelParameterConfigService.load(model_type="xgboost", target=target)
 
         self.stdout.write("Training Random Forest...")
 
@@ -69,9 +63,7 @@ class Command(BaseCommand):
             },
         )
 
-        self.stdout.write(
-            self.style.SUCCESS("Random Forest saved")
-        )
+        self.stdout.write(self.style.SUCCESS("Random Forest saved"))
 
         self.stdout.write("Training Logistic Regression...")
 
@@ -84,9 +76,7 @@ class Command(BaseCommand):
             through_week=through_week,
         )
 
-        self.stdout.write(
-            self.style.SUCCESS("Logistic Regression saved")
-        )
+        self.stdout.write(self.style.SUCCESS("Logistic Regression saved"))
 
         self.stdout.write("Training XGBoost...")
 
@@ -99,6 +89,4 @@ class Command(BaseCommand):
             through_week=through_week,
         )
 
-        self.stdout.write(
-            self.style.SUCCESS("XGBoost saved")
-        )
+        self.stdout.write(self.style.SUCCESS("XGBoost saved"))

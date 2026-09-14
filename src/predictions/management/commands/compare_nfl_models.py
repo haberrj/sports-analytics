@@ -1,3 +1,5 @@
+import warnings
+
 from django.core.management.base import BaseCommand
 
 from predictions.nfl.evaluation import NFLModelEvaluationService
@@ -25,41 +27,30 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        warnings.filterwarnings(
+            "ignore",
+            message="Skipping features without any observed values.*",
+            category=UserWarning,
+        )
+
         comparison = NFLModelEvaluationService.compare_saved_models(
             test_season=options["test_season"],
             target=options["target"],
             calibration_bins=options["calibration_bins"],
         )
 
-        training_cutoff = str(
-            comparison.training_through_season
-        )
+        training_cutoff = str(comparison.training_through_season)
 
         if comparison.training_through_week is not None:
-            training_cutoff += (
-                f" week {comparison.training_through_week}"
-            )
+            training_cutoff += f" week {comparison.training_through_week}"
 
         self.stdout.write("")
-        self.stdout.write(
-            f"Target: {options['target']}"
-        )
-        self.stdout.write(
-            f"Training through: {training_cutoff}"
-        )
-        self.stdout.write(
-            f"Test season: {comparison.test_season}"
-        )
+        self.stdout.write(f"Target: {options['target']}")
+        self.stdout.write(f"Training through: {training_cutoff}")
+        self.stdout.write(f"Test season: {comparison.test_season}")
         self.stdout.write("")
 
-        header = (
-            f"{'Model':<20}"
-            f"{'Accuracy':>10}"
-            f"{'Log Loss':>12}"
-            f"{'Brier':>10}"
-            f"{'ROC AUC':>10}"
-            f"{'ECE':>10}"
-        )
+        header = f"{'Model':<20}{'Accuracy':>10}{'Log Loss':>12}{'Brier':>10}{'ROC AUC':>10}{'ECE':>10}"
 
         self.stdout.write(header)
         self.stdout.write("-" * len(header))

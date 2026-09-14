@@ -46,7 +46,7 @@ class Command(BaseCommand):
             message="Skipping features without any observed values.*",
             category=UserWarning,
         )
-        
+
         target = options["target"]
         validation_seasons = options["validation_seasons"]
         iterations = options["iterations"]
@@ -56,16 +56,11 @@ class Command(BaseCommand):
             "random_forest",
             "all",
         }:
-            self.stdout.write(
-                "Optimizing Random Forest..."
-            )
+            self.stdout.write("Optimizing Random Forest...")
 
             result = NFLTrainingService.optimize_model(
                 model_class=NFLRandomForestModel,
-                parameter_suggester=(
-                    NFLRandomForestModel
-                    .suggest_random_forest_parameters
-                ),
+                parameter_suggester=(NFLRandomForestModel.suggest_random_forest_parameters),
                 validation_seasons=validation_seasons,
                 target=target,
                 iterations=iterations,
@@ -89,16 +84,11 @@ class Command(BaseCommand):
             "xgboost",
             "all",
         }:
-            self.stdout.write(
-                "Optimizing XGBoost..."
-            )
+            self.stdout.write("Optimizing XGBoost...")
 
             result = NFLTrainingService.optimize_model(
                 model_class=NFLXGBoostModel,
-                parameter_suggester=(
-                    NFLXGBoostModel
-                    .suggest_xgboost_parameters
-                ),
+                parameter_suggester=(NFLXGBoostModel.suggest_xgboost_parameters),
                 validation_seasons=validation_seasons,
                 target=target,
                 iterations=iterations,
@@ -124,34 +114,20 @@ class Command(BaseCommand):
         result,
     ):
         self.stdout.write("")
-        self.stdout.write(
-            self.style.SUCCESS(
-                f"{model_name} optimization complete"
-            )
-        )
+        self.stdout.write(self.style.SUCCESS(f"{model_name} optimization complete"))
 
         self.stdout.write("")
 
         self.stdout.write("Best parameters:")
 
         for key, value in result.parameters.items():
-            self.stdout.write(
-                f"  {key}: {value}"
-            )
+            self.stdout.write(f"  {key}: {value}")
 
         self.stdout.write("")
 
-        self.stdout.write(
-            f"Accuracy:    {result.accuracy:.4f}"
-        )
-        self.stdout.write(
-            f"Log loss:    {result.log_loss:.4f}"
-        )
-        self.stdout.write(
-            f"Brier score: {result.brier_score:.4f}"
-        )
-        self.stdout.write(
-            f"ROC AUC:     {result.roc_auc:.4f}"
-        )
+        self.stdout.write(f"Accuracy:    {result.accuracy:.4f}")
+        self.stdout.write(f"Log loss:    {result.log_loss:.4f}")
+        self.stdout.write(f"Brier score: {result.brier_score:.4f}")
+        self.stdout.write(f"ROC AUC:     {result.roc_auc:.4f}")
 
         self.stdout.write("")
