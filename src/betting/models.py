@@ -145,10 +145,6 @@ class ExternalTeamMapping(models.Model):
                 fields=["provider", "external_team_id"],
                 name="unique_external_team",
             ),
-            models.UniqueConstraint(
-                fields=["team", "provider"],
-                name="unique_team_provider",
-            ),
         ]
 
     def __str__(self):

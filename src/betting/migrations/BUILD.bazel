@@ -5,6 +5,7 @@ py_library(
     srcs = [
         "0001_initial.py",
         "0002_externalteammapping.py",
+        "0003_remove_externalteammapping_unique_team_provider.py",
         "__init__.py",
     ],
     imports = ["../.."],

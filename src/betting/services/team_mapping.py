@@ -22,28 +22,24 @@ class TeamMappingService:
         unmatched = 0
 
         for external_team_id, external_name in participants.items():
-            existing_mapping = ExternalTeamMapping.objects.filter(
-                provider=ExternalTeamMapping.Provider.ODDSPAPI,
-                external_team_id=str(external_team_id),
-            ).first()
-
-            if existing_mapping is not None:
-                existing += 1
-                continue
-
             team = self._find_team(external_name)
 
             if team is None:
                 unmatched += 1
                 continue
 
-            ExternalTeamMapping.objects.create(
-                team=team,
+            _, was_created = ExternalTeamMapping.objects.get_or_create(
                 provider=ExternalTeamMapping.Provider.ODDSPAPI,
                 external_team_id=str(external_team_id),
+                defaults={
+                    "team": team,
+                },
             )
 
-            created += 1
+            if was_created:
+                created += 1
+            else:
+                existing += 1
 
         return TeamMappingResult(
             participants_seen=len(participants),
