@@ -15,7 +15,7 @@ jobs:
       matrix:
         branch:
           - develop
-          - main
+          - master
 
     runs-on: ubuntu-latest
 
