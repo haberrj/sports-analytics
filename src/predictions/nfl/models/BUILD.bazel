@@ -1,27 +1,4 @@
-load("@rules_python//python:defs.bzl", "py_binary", "py_library")
-
-py_binary(
-    name = "train_models",
-    srcs = ["train_models.py"],
-    imports = ["../../.."],
-    visibility = ["//src:__subpackages__"],
-    deps = [
-        ":logistic",
-        ":random_forest",
-        ":training",
-        ":xgboost",
-        "//src/betting",  # keep
-        "//src/config",  # keep
-        "//src/fantasy",  # keep
-        "//src/games",  # keep
-        "//src/ingestion",  # keep
-        "//src/players",  # keep
-        "//src/predictions",  # keep
-        "//src/stats",  # keep
-        "//src/teams",  # keep
-        "@pip//django",
-    ],
-)
+load("@rules_python//python:defs.bzl", "py_library")
 
 py_library(
     name = "artifacts",
@@ -106,13 +83,9 @@ py_library(
     ],
 )
 
-py_binary(
-    name = "compare_models",
-    srcs = ["compare_models.py"],
+py_library(
+    name = "parameter_config",
+    srcs = ["parameter_config.py"],
     imports = ["../../.."],
     visibility = ["//src:__subpackages__"],
-    deps = [
-        "//src/predictions/nfl:evaluation",
-        "@pip//django",
-    ],
 )

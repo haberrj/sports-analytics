@@ -119,3 +119,40 @@ pytest_test(
         "@pip//pytest",
     ],
 )
+
+pytest_test(
+    name = "test_optimize_nfl_models_command",
+    srcs = ["test_optimize_nfl_models_command.py"],
+    imports = ["../../.."],
+    deps = [
+        "//src/predictions/management/commands",
+        "//src/predictions/nfl/models:optimizer",
+        "//src/predictions/nfl/models:random_forest",
+        "//src/predictions/nfl/models:xgboost",
+        "@pip//django",
+    ],
+)
+
+pytest_test(
+    name = "test_parameter_config",
+    srcs = ["test_parameter_config.py"],
+    imports = ["../../.."],
+    deps = [
+        "//src/predictions/nfl/models:parameter_config",
+        "@pip//pytest",
+    ],
+)
+
+pytest_test(
+    name = "test_train_nfl_models_command",
+    srcs = ["test_train_nfl_models_command.py"],
+    imports = ["../../.."],
+    deps = [
+        "//src/predictions/management/commands",
+        "//src/predictions/nfl/models:logistic",
+        "//src/predictions/nfl/models:random_forest",
+        "//src/predictions/nfl/models:xgboost",
+        "@pip//django",
+        "@pip//pytest",
+    ],
+)
