@@ -4,7 +4,9 @@ import pytest
 
 from predictions.nfl.models.base import ClassificationModel
 from predictions.nfl.models.optimizer import OptimizationResult
-from predictions.nfl.models.random_forest import NFLRandomForestModel
+from predictions.nfl.models.random_forest import (
+    NFLRandomForestModel,
+)
 from predictions.nfl.models.training import NFLTrainingService
 
 
@@ -15,8 +17,14 @@ def test_optimize_model(
     mock_optimizer_class,
 ):
     dataset = [
-        {"season": 2020, "home_win": 1},
-        {"season": 2021, "home_win": 0},
+        {
+            "season": 2020,
+            "home_win": 1,
+        },
+        {
+            "season": 2021,
+            "home_win": 0,
+        },
     ]
 
     expected_result = OptimizationResult(
@@ -92,7 +100,10 @@ def test_evaluate_model(
     mock_optimizer_class,
 ):
     dataset = [
-        {"season": 2024, "home_win": 1},
+        {
+            "season": 2024,
+            "home_win": 1,
+        },
     ]
 
     parameters = {
@@ -154,10 +165,22 @@ def test_train_model(
     mock_split_features_target,
 ):
     dataset = [
-        {"season": 2022, "home_win": 1},
-        {"season": 2023, "home_win": 0},
-        {"season": 2024, "home_win": 1},
-        {"season": 2025, "home_win": 0},
+        {
+            "season": 2022,
+            "home_win": 1,
+        },
+        {
+            "season": 2023,
+            "home_win": 0,
+        },
+        {
+            "season": 2024,
+            "home_win": 1,
+        },
+        {
+            "season": 2025,
+            "home_win": 0,
+        },
     ]
 
     training_features = [
@@ -208,9 +231,18 @@ def test_train_model(
 
     mock_split_features_target.assert_called_once_with(
         rows=[
-            {"season": 2022, "home_win": 1},
-            {"season": 2023, "home_win": 0},
-            {"season": 2024, "home_win": 1},
+            {
+                "season": 2022,
+                "home_win": 1,
+            },
+            {
+                "season": 2023,
+                "home_win": 0,
+            },
+            {
+                "season": 2024,
+                "home_win": 1,
+            },
         ],
         target="home_win",
     )
@@ -333,7 +365,10 @@ def test_train_model_raises_when_no_training_data(
     mock_build_dataset,
 ):
     mock_build_dataset.return_value = [
-        {"season": 2025, "home_win": 1},
+        {
+            "season": 2025,
+            "home_win": 1,
+        },
     ]
 
     with pytest.raises(
@@ -398,6 +433,7 @@ def test_train_and_save_model(
         model_type="random_forest",
         target="home_win",
         through_season=2025,
+        through_week=8,
         parameters=parameters,
     )
 

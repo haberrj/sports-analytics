@@ -115,6 +115,7 @@ pytest_test(
     deps = [
         "//src/predictions",
         "//src/predictions/nfl:evaluation",
+        "//src/predictions/nfl/models:artifacts",
         "@pip//pytest",
     ],
 )

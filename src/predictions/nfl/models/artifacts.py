@@ -13,6 +13,7 @@ class NFLModelArtifact:
     model_type: str
     target: str
     through_season: int
+    through_week: int | None
     parameters: dict[str, Any]
     trained_at: datetime
 
@@ -26,6 +27,7 @@ class NFLModelArtifactService:
         model_type: str,
         target: str,
         through_season: int,
+        through_week: int | None,
         parameters: dict[str, Any],
     ) -> Path:
         artifact = NFLModelArtifact(
@@ -33,6 +35,7 @@ class NFLModelArtifactService:
             model_type=model_type,
             target=target,
             through_season=through_season,
+            through_week=through_week,
             parameters=parameters,
             trained_at=datetime.now(timezone.utc),  # noqa: UP017
         )

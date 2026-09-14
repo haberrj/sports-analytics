@@ -51,6 +51,6 @@ py_library(
         ":dataset",
         ":preprocessing",
         "//src/predictions",
-        "//src/predictions/nfl/models:base",
+        "//src/predictions/nfl/models:artifacts",
     ],
 )

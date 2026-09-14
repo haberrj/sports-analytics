@@ -130,6 +130,7 @@ class NFLTrainingService:
             model_type=model_type,
             target=target,
             through_season=through_season,
+            through_week=through_week,
             parameters=parameters,
         )
 

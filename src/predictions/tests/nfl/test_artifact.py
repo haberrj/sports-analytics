@@ -32,7 +32,8 @@ def test_save_and_load_model_artifact(tmp_path):
             model=model,
             model_type="random_forest",
             target="home_win",
-            through_season=2024,
+            through_season=2025,
+            through_week=8,
             parameters=parameters,
         )
 
@@ -46,13 +47,45 @@ def test_save_and_load_model_artifact(tmp_path):
     assert model_path.exists()
     assert artifact.model_type == "random_forest"
     assert artifact.target == "home_win"
-    assert artifact.through_season == 2024
+    assert artifact.through_season == 2025
+    assert artifact.through_week == 8
     assert artifact.parameters == parameters
     assert isinstance(artifact.trained_at, datetime)
     assert isinstance(
         artifact.model,
         NFLRandomForestModel,
     )
+
+
+def test_save_and_load_full_season_model_artifact(tmp_path):
+    model = NFLRandomForestModel(
+        n_estimators=10,
+        n_jobs=1,
+    )
+
+    with patch.object(
+        NFLModelArtifactService,
+        "MODEL_DIRECTORY",
+        tmp_path,
+    ):
+        NFLModelArtifactService.save(
+            model=model,
+            model_type="random_forest",
+            target="home_win",
+            through_season=2024,
+            through_week=None,
+            parameters={
+                "n_estimators": 10,
+            },
+        )
+
+        artifact = NFLModelArtifactService.load(
+            model_type="random_forest",
+            target="home_win",
+        )
+
+    assert artifact.through_season == 2024
+    assert artifact.through_week is None
 
 
 def test_load_model_artifact_raises_when_missing(tmp_path):
