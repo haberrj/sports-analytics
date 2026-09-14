@@ -1,0 +1,23 @@
+load("@rules_python//python:defs.bzl", "py_library")
+
+py_library(
+    name = "services",
+    srcs = [
+        "__init__.py",
+        "fixture_matcher.py",
+        "market_catalog.py",
+        "odds_importer.py",
+        "odds_ingestion.py",
+        "oddspapi_client.py",
+        "team_mapping.py",
+    ],
+    imports = ["../.."],
+    visibility = ["//src:__subpackages__"],
+    deps = [
+        "//src/betting",
+        "//src/games",
+        "//src/teams",
+        "@pip//django",
+        "@pip//requests",
+    ],
+)

@@ -1,0 +1,76 @@
+load("@rules_python//python:defs.bzl", "py_library")
+load("//:pytest.bzl", "pytest_test")
+
+py_library(
+    name = "tests",
+    srcs = ["__init__.py"],
+    imports = ["../.."],
+    visibility = ["//src:__subpackages__"],
+)
+
+pytest_test(
+    name = "test_market_catalog",
+    srcs = ["test_market_catalog.py"],
+    imports = ["../.."],
+    deps = ["//src/betting/services"],
+)
+
+pytest_test(
+    name = "test_odds_importer",
+    srcs = ["test_odds_importer.py"],
+    imports = ["../.."],
+    deps = [
+        "//src/betting",
+        "//src/betting/services",
+        "//src/games",
+        "//src/teams",
+        "@pip//pytest",
+    ],
+)
+
+pytest_test(
+    name = "test_oddspapi_client",
+    srcs = ["test_oddspapi_client.py"],
+    imports = ["../.."],
+    deps = [
+        "//src/betting/services",
+        "@pip//pytest",
+        "@pip//requests",
+    ],
+)
+
+pytest_test(
+    name = "test_odds_ingestion",
+    srcs = ["test_odds_ingestion.py"],
+    imports = ["../.."],
+    deps = [
+        "//src/betting",
+        "//src/betting/services",
+        "@pip//pytest",
+    ],
+)
+
+pytest_test(
+    name = "test_fixture_matching",
+    srcs = ["test_fixture_matching.py"],
+    imports = ["../.."],
+    deps = [
+        "//src/betting",
+        "//src/betting/services",
+        "//src/games",
+        "//src/teams",
+        "@pip//pytest",
+    ],
+)
+
+pytest_test(
+    name = "test_team_mapping",
+    srcs = ["test_team_mapping.py"],
+    imports = ["../.."],
+    deps = [
+        "//src/betting",
+        "//src/betting/services",
+        "//src/teams",
+        "@pip//pytest",
+    ],
+)

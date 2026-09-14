@@ -1,20 +1,15 @@
 load("@rules_python//python:defs.bzl", "py_library")
 
 py_library(
-    name = "betting",
+    name = "commands",
     srcs = [
         "__init__.py",
-        "admin.py",
-        "apps.py",
-        "models.py",
-        "tests.py",
-        "views.py",
+        "ingest_odds.py",
     ],
-    imports = [".."],
+    imports = ["../../.."],
     visibility = ["//src:__subpackages__"],
     deps = [
-        "//src/games",
-        "//src/teams",
+        "//src/betting/services",
         "@pip//django",
     ],
 )

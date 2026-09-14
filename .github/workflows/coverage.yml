@@ -15,7 +15,7 @@ jobs:
       matrix:
         branch:
           - develop
-          - main
+          - master
 
     runs-on: ubuntu-latest
 
@@ -41,6 +41,7 @@ jobs:
       POSTGRES_HOST: localhost
       POSTGRES_PORT: 5432
       DJANGO_DEBUG: "false"
+      DJANGO_SECRET_KEY: ci-only-not-a-real-secret
 
     steps:
       - name: Checkout ${{ matrix.branch }}

@@ -29,6 +29,7 @@ def pytest_test(name, srcs = [], deps = [], **kwargs):
         env = {
             "DJANGO_SETTINGS_MODULE": "config.settings",
             "POSTGRES_HOST": "localhost",
+            "DJANGO_SECRET_KEY": "test-secret-key",
         },
         **kwargs
     )

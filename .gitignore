@@ -228,3 +228,5 @@ data
 
 # Bazel
 bazel-*
+
+tmp
